@@ -25,6 +25,7 @@ before_install:
 
 script:
 #  - py.test -v --cov=./
+  - py.test -v
 
 # after_success:
 #   - ./tools/travis-upload-wheel.sh
@@ -32,5 +33,5 @@ script:
 notifications:
     email: false
 
-after_success:
+# after_success:
 #  - codecov
