@@ -7,7 +7,7 @@ language: python
 sudo: false
 
 matrix:
-    - python: 3.5
+  - python: 3.5
 
 before_install:
   - uname -a
