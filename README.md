@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3.svg?branch=master)](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3)
+
+
 # QM_2017_SSS_Team3
 
 ## Hongzhou Ye
