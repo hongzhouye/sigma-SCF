@@ -37,6 +37,7 @@ script:
 
 notifications:
   email: false
+  slack: molssisss:HbcHVWbla5JMNiKKfudbmzfB
 
 after_success:
   - codecov
