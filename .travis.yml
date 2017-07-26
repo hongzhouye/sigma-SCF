@@ -31,7 +31,10 @@ before_script:
   - python -V
 
 script:
-  - py.test -v
+  - py.test -v --cov=./
 
 notifications:
   email: false
+
+after_success:
+  - codecov
