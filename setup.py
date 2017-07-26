@@ -4,12 +4,12 @@ import setuptools
 
 if __name__ == "__main__":
     setuptools.setup(
-        name='friendly-computing-machine',
+        name='scf',
         version="0.0.0",
-        description='A (friendly!!) Python program that does math.',
-        author='Shannon Houck',
-        author_email='shouck@vt.edu',
-        url="https://github.com/shannonhouck/friendly-computing-machine",
+        description='A program that solves quantum chemistry problems.',
+        author='Hongzhou Ye, Nadav Geva, Courtney Fitzgerald, Shannon Houck',
+        #author_email='shouck@vt.edu',
+        url="https://github.com/MolSSI-SSS/QM_2017_SSS_Team3",
         license='BSD-3C',
         packages=setuptools.find_packages(),
         install_requires=[
