@@ -38,4 +38,7 @@ notifications:
   email: false
 
 after_success:
+  - ./tools/travis-upload-wheel.sh
+
+after_success:
   - codecov
