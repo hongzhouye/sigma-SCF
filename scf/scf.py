@@ -29,6 +29,9 @@ def scf(ao_int, scf_params):
         - max_nbf[int]  max # of basis functions (for memory concerned)
 
         - guess [str]   initial guess (currently only "core" is supported)
+
+        - max_iter[int] max # of SCF iterations
+                        CHECK: positive integers
     """
     # unpack ao_int
     T = ao_int['T']
@@ -47,8 +50,40 @@ def scf(ao_int, scf_params):
     opt = scf_params['opt']
     max_nbf = scf_params['mat_nbf']
     guess = scf_params['core']
+    max_iter = scf_params['max_iter']
 
-    # initial guess
+    # initial guess (case insensitive)
+    if guess.upper() == "CORE":
+        eps, C = diag(H, A)
+        D = get_dm(C, nel)
+    else:
+        raise Exception("Currently only core guess is supported!")
+
+    # SCF loop
+    conv_flag = False
+    for iteration in range(1:(max_iter+1)):
+        # get F
+        F = get_fock()
+
+        # calculate error
+        err = get_SCF_err()
+
+        # check convergence
+        if err < conv:
+            conv_flag = True
+            print ("  ** SCF converges in %d iterations! **" % iteration)
+            break
+
+        # diag and update density matrix
+        eps, C = diag(F)
+        D = get_dm(C, nel)
+
+    # post process
+    if conv_flag:
+        return eps, C, D
+    else:
+        raise Exception ("  ** SCF fails to converge in %d iterations! **"
+                         % max_iter)
 
 
 def energy():
