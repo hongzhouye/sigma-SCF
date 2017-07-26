@@ -8,7 +8,6 @@ if __name__ == "__main__":
         version="0.0.0",
         description='A program that solves quantum chemistry problems.',
         author='Hongzhou Ye, Nadav Geva, Courtney Fitzgerald, Shannon Houck',
-        #author_email='shouck@vt.edu',
         url="https://github.com/MolSSI-SSS/QM_2017_SSS_Team3",
         license='BSD-3C',
         packages=setuptools.find_packages(),
