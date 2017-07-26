@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3.svg?branch=master)](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3)
+[![codecov](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3/branch/master/graph/badge.svg)](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3)
 
 
 # QM_2017_SSS_Team3
