@@ -5,7 +5,6 @@ Initializations for scf calculations:
 """
 import yaml
 import psi4wrapper as p4w
-
 '''
 scf_params = None
 ao_ints = None
@@ -27,9 +26,6 @@ def init(input_file):
     """
     setup the parameters for thre job
     """
-    global scf_params
-    global ao_ints
-    global e_ZZ_repul
 
     defaults_location = "scf_params_default.yml"
     scf_params = parse_yaml(defaults_location)
@@ -42,8 +38,11 @@ def init(input_file):
     if (scf_params['nel'] % 2 == 1):
         raise Exception("only closed shell molecules are supported!")
     else:
-        scf_params['nel'] = scf_params['nel'] / 2
+        scf_params['nel'] = int(scf_params['nel'] / 2)
     scf_params['nbas'] = n_basis
+    print(scf_params)
+    return ao_ints, scf_params, e_ZZ_repul
+
 
 if __name__ == "__main__":
     init("test.yml")
