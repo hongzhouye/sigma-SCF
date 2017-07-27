@@ -1,0 +1,23 @@
+nel:
+    ""
+nbas:
+    ""
+conv:
+     5
+opt:
+     "None"
+max_nbf:
+     120
+guess:
+     "Core"
+max_iter:
+     100
+
+basis:
+    "cc-pvdz"
+
+geometry:
+|
+    O
+    H 1 1.1
+    H 1 1.1 2 104
