@@ -19,10 +19,10 @@ def init(scf_params):
     mol.update_geometry()
     bas = psi4.core.BasisSet.build(mol, target=basis)
     mints = psi4.core.MintsHelper(bas)
-	
+
     nbf = mints.nbf()
-    if (nbf > 100):
-        raise Exception("More than 100 basis functions!")
+    if (nbf > scf_params['max_nbf']):
+        raise Exception("More than %d basis functions!" % scf_params['max_nbf'])
 
     ao_ints['V'] = np.array(mints.ao_potential())
     ao_ints['T'] = np.array(mints.ao_kinetic())
@@ -39,5 +39,4 @@ def init(scf_params):
         nel += mol.Z(i)
 
 
-    return ao_ints, e_nuclear_repulsion, nel, nbf 
- 
+    return ao_ints, e_nuclear_repulsion, nel, nbf

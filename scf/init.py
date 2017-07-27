@@ -4,7 +4,7 @@ Initializations for scf calculations:
     - parsing & packing parameters
 """
 import yaml
-import psi4wrapper as p4w
+import psi4wrapper as p4wi
 
 '''
 scf_params = None
