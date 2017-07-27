@@ -1,7 +1,3 @@
-nel:
-    ""
-nbas:
-    ""
 conv:
      5
 opt:
@@ -12,6 +8,8 @@ guess:
      "Core"
 max_iter:
      120
+charge:
+    0
 
 basis:
     "cc-pvdz"

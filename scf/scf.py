@@ -2,7 +2,7 @@
 The Hartree-Fock driver.
 Performs a Hartree-Fock calculation on a given molecule.
 """
-
+import numpy as np
 
 def scf(ao_int, scf_params):
     """
@@ -61,12 +61,16 @@ def scf(ao_int, scf_params):
 
     # SCF loop
     conv_flag = False
-    for iteration in range(1:(max_iter+1)):
+    for iteration in range(1,(max_iter+1)):
         # get F
-        F = get_fock()
+        F = get_fock(H, g, D)
+
+        # diag and update density matrix
+        eps, C = diag(F ,A)
+        D = get_dm(C, nel)
 
         # calculate error
-        err = get_SCF_err()
+        err = get_SCF_err(S, D, F)
 
         # check convergence
         if err < conv:
@@ -74,9 +78,6 @@ def scf(ao_int, scf_params):
             print ("  ** SCF converges in %d iterations! **" % iteration)
             break
 
-        # diag and update density matrix
-        eps, C = diag(F)
-        D = get_dm(C, nel)
 
     # post process
     if conv_flag:

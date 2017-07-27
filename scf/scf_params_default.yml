@@ -12,6 +12,8 @@ guess:
      "Core"
 max_iter:
      100
+charge:
+     0
 
 basis:
     "cc-pvdz"

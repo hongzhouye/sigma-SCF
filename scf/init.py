@@ -6,9 +6,12 @@ Initializations for scf calculations:
 import yaml
 import psi4wrapper as p4w
 
+'''
 scf_params = None
 ao_ints = None
 e_ZZ_repul = None
+'''
+
 
 def parse_yaml(file_name):
     """
@@ -34,8 +37,12 @@ def init(input_file):
     for key in user_input.keys():
         if key in scf_params.keys():
             scf_params[key] = user_input[key]
-    ao_ints, e_ZZ_repul, n_basis, n_el = p4w.init(scf_params)
+    ao_ints, e_ZZ_repul, n_el, n_basis = p4w.init(scf_params)
     scf_params['nel'] = n_el - scf_params['charge']
+    if (scf_params['nel'] % 2 == 1):
+        raise Exception("only closed shell molecules are supported!")
+    else:
+        scf_params['nel'] = scf_params['nel'] / 2
     scf_params['nbas'] = n_basis
 
 if __name__ == "__main__":
