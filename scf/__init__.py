@@ -4,5 +4,6 @@ Initializes everything for the SCF program.
 
 
 # import the HF driver
-from . import hf
-from .hf import *
+from .init import *
+from .run import *
+from .clean import *
