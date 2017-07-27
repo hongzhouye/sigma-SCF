@@ -3,6 +3,8 @@ The Hartree-Fock driver.
 Performs a Hartree-Fock calculation on a given molecule.
 """
 import numpy as np
+from scf_utils import *
+
 
 def scf(ao_int, scf_params):
     """
@@ -41,15 +43,15 @@ def scf(ao_int, scf_params):
     A = ao_int['A']
 
     # build Hcore (T and V are not needed in scf)
-    Hcore = T + V
+    H = T + V
 
     # unpack scf_params
     nel = scf_params['nel']
     nbas = scf_params['nbas']
     conv = 10. ** (-scf_params['conv'])
     opt = scf_params['opt']
-    max_nbf = scf_params['mat_nbf']
-    guess = scf_params['core']
+    max_nbf = scf_params['max_nbf']
+    guess = scf_params['guess']
     max_iter = scf_params['max_iter']
 
     # initial guess (case insensitive)
@@ -65,12 +67,17 @@ def scf(ao_int, scf_params):
         # get F
         F = get_fock(H, g, D)
 
+
+        # calculate error
+        err = get_SCF_err(S, D, F)
+
         # diag and update density matrix
         eps, C = diag(F ,A)
         D = get_dm(C, nel)
 
-        # calculate error
-        err = get_SCF_err(S, D, F)
+        # print iteratoin info
+        print("iter: {0:2d}, err: {1:0.5E}".format(iteration, err))
+
 
         # check convergence
         if err < conv:
