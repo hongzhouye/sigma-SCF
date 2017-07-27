@@ -5,6 +5,11 @@ Initializations for scf calculations:
 """
 import yaml
 import psi4wrapper as p4w
+<<<<<<< HEAD
+import os
+
+=======
+>>>>>>> 03bacd8a3d2ce4508cbffefdcd61fe97de876402
 '''
 scf_params = None
 ao_ints = None
@@ -27,7 +32,7 @@ def init(input_file):
     setup the parameters for thre job
     """
 
-    defaults_location = "scf_params_default.yml"
+    defaults_location = os.path.dirname(__file__) + "/scf_params_default.yml"
     scf_params = parse_yaml(defaults_location)
     user_input = parse_yaml(input_file)
     for key in user_input.keys():
