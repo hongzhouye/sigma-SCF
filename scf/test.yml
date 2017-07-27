@@ -12,7 +12,7 @@ charge:
     0
 
 basis:
-    "cc-pvdz"
+    "sto-3g"
 
 geometry:
 |   
