@@ -37,5 +37,6 @@ def init(scf_params):
     nel = 0
     for i in range(mol.natom()):
         nel += mol.Z(i)
+    nel = int(nel)
 
     return ao_ints, e_nuclear_repulsion, nel, nbf
