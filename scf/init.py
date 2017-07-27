@@ -4,7 +4,8 @@ Initializations for scf calculations:
     - parsing & packing parameters
 """
 import yaml
-import psi4wrapper as p4wi
+import psi4wrapper as p4w
+import os
 
 '''
 scf_params = None
@@ -31,7 +32,7 @@ def init(input_file):
     global ao_ints
     global e_ZZ_repul
 
-    defaults_location = "scf_params_default.yml"
+    defaults_location = os.path.dirname(__file__) + "/scf_params_default.yml"
     scf_params = parse_yaml(defaults_location)
     user_input = parse_yaml(input_file)
     for key in user_input.keys():
