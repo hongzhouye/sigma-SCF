@@ -5,17 +5,16 @@ Making a wrapper for psi4 that retrieves integrals and the nuclear-nuclear repul
 import numpy as np
 import psi4
 
-V = None
-g = None
-T = None
-S = None
-A = None
-e_nuclear_repulsion = None
 
-def init(mol_geometry, basis):
+def init(scf_params):
     """
     Sets up integral variables. Function inputs are molecule string and basis string. Returns nothing.
     """
+    basis = scf_params['basis']
+    mol_geometry = scf_params['geometry']
+
+    ao_ints = {'V':'','T':'','S':'','g':'','A':''}
+
     mol = psi4.geometry(mol_geometry)
     mol.update_geometry()
     bas = psi4.core.BasisSet.build(mol, target=basis)
@@ -25,16 +24,20 @@ def init(mol_geometry, basis):
     if (nbf > 100):
         raise Exception("More than 100 basis functions!")
 
-    V = np.array(mints.ao_potential())
-    T = np.array(mints.ao_kinetic())
-    S = np.array(mints.ao_overlap())
-    g = np.array(mints.ao_eri())
+    ao_ints['V'] = np.array(mints.ao_potential())
+    ao_ints['T'] = np.array(mints.ao_kinetic())
+    ao_ints['S'] = np.array(mints.ao_overlap())
+    ao_ints['g'] = np.array(mints.ao_eri())
 
     A = mints.ao_overlap()
     A.power(-0.5, 1.e-14)
-    A = np.array(A)
-    
-    e_nuclear_repulsion = mol.nuclear_repulsion_energy()
+    ao_ints['A'] = np.array(A)
 
-    return
+    e_nuclear_repulsion = mol.nuclear_repulsion_energy()
+    nel = 0
+    for i in range(mol.natom()):
+        nel += mol.Z(i)
+
+
+    return ao_ints, e_nuclear_repulsion, nel, nbf 
  
