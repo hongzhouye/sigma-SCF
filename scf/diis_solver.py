@@ -8,9 +8,9 @@ def diis_solver(errs):
 	n = len(errs)
 	
 	B = np.zeros([n,n])
-	for i in range(n):
-		for j in range(n):
-			B[i,j] = errs[i].ravel() @ errs[j].ravel()
+	for i, erra in enumerate(errs):
+		for j, errb in enumerate(errs):
+			B[i, j] = erra.ravel() @ errb.ravel()
 
 	
 	A = np.ones([n+1,n+1])
@@ -30,9 +30,10 @@ def diis_solver(errs):
 if __name__ == "__main__":
 	n = 10
 	m = 4
-	errs = [None] * m
+	from collections import deque
+	errs = deque([], maxlen = m)
 	for i in range(m):
-		errs[i] = np.random.rand(n, n)
+		errs.append(np.random.rand(n, n))
 
 	c = diis_solver(errs)
 	print (c)
