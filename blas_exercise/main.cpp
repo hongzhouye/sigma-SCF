@@ -23,7 +23,7 @@ int main()
     double E = get_eel(H, F, D, nbas);
 
     cout << "nel = " << nel << endl;
-    cout << "eel = " << E << endl;
+    cout << "etot = " << E + 8.0023664507190784 << endl;
 
     return 0;
 }
