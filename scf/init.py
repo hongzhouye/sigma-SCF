@@ -5,11 +5,8 @@ Initializations for scf calculations:
 """
 import yaml
 import psi4wrapper as p4w
-<<<<<<< HEAD
 import os
 
-=======
->>>>>>> 03bacd8a3d2ce4508cbffefdcd61fe97de876402
 '''
 scf_params = None
 ao_ints = None
