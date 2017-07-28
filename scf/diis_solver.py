@@ -1,0 +1,38 @@
+"""
+This is a DIIS solver for finding matrix of error vectors
+"""
+
+import numpy as np
+
+def diis_solver(errs):
+	n = len(errs)
+	
+	B = np.zeros([n,n])
+	for i in range(n):
+		for j in range(n):
+			B[i,j] = errs[i].ravel() @ errs[j].ravel()
+
+	
+	A = np.ones([n+1,n+1])
+	A = -A
+	A[:n, :n] = B
+	A[n,n] = 0
+	
+	b = np.zeros(n+1)
+	b[n] = -1
+
+	x = np.linalg.solve(A, b)
+
+	c = x[:n]
+
+	return c
+
+if __name__ == "__main__":
+	n = 10
+	m = 4
+	errs = [None] * m
+	for i in range(m):
+		errs[i] = np.random.rand(n, n)
+
+	c = diis_solver(errs)
+	print (c)
