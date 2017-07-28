@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include "include/read_in_files.hpp"
 
 using namespace std;
 

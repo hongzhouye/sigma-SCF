@@ -6,7 +6,6 @@
 #include "include/get_eel.hpp"
 #include <lawrap/blas.h>
 
-
 double get_eel(const matrix& H, const matrix& F, const matrix& D, int nbas)
 {
 	// FH = H + F
@@ -16,7 +15,7 @@ double get_eel(const matrix& H, const matrix& F, const matrix& D, int nbas)
 
 	// FHD_2 = FH * D * 0.5
 
-	matrix FHD_2(nbas * nbas);
+	matrix FHD_2(nbas * nbas, 0.);
 	LAWrap::gemm('N', 'N', nbas, nbas, nbas, 0.5, FH.data(), nbas,
 		D.data(), nbas, 0., FHD_2.data(), nbas);
 

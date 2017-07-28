@@ -1,16 +1,14 @@
 /* ----------------------------------------------------
-    Header file for get_nel.cpp
+    Header file for read_in_files.cpp
 ---------------------------------------------------- */
 
-#ifndef GET_NEL_HPP
-#define GET_NEL_HPP
+#ifndef READ_IN_FILES_HPP
+#define READ_IN_FILES_HPP
 
 #include <iostream>
 #include <vector>
 #include <cmath>
 
-typedef std::vector<double> matrix;
-
-int get_nel(const matrix& D, const matrix& S);
+std::vector<double> read_matrix_file(const std::string& filename, int nrow, int ncol);
 
 #endif
