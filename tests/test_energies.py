@@ -9,7 +9,6 @@ def test_energies():
     """
     ao_ints, test_scf_param, e_ZZ_repulsion = scf.init(\
         os.path.dirname(__file__) + "/test_energies.yml")
-
     eps, C, D, F = scf.scf(ao_ints, test_scf_param)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F+H)*D) + e_ZZ_repulsion
