@@ -12,8 +12,6 @@ if __name__ == "__main__":
     print("\nFINAL SCF ENERGY: {}\n".format(energy))
 
     # mp2
-    if (scf_params['is_fitted'] == True):
-        raise Exception("Currently only non-DF is supported MP2.")
     import mp2
     print("SCS-MP2 Correlation Energy: {}\n".format(mp2.get_mp2_energy(\
-        eps, C, ao_ints['g'], scf_params['nel'])))
+        eps, C, ao_ints['g4'], scf_params['nel'])))
