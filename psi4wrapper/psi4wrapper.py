@@ -18,6 +18,7 @@ def init(scf_params):
     mol = psi4.geometry(mol_geometry)
     mol.update_geometry()
     bas = psi4.core.BasisSet.build(mol, target=basis)
+    aux_bas = psi4.core.BasisSet.build(mol, fitrole="JKFIT", other=basis)
     mints = psi4.core.MintsHelper(bas)
 
     nbf = mints.nbf()

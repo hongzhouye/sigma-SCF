@@ -1,7 +1,7 @@
 conv:
      5
 opt:
-     "None"
+     "DIIS"
 max_nbf:
      120
 guess:

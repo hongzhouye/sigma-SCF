@@ -10,7 +10,7 @@ def diis_solver(errs):
 	B = np.zeros([n,n])
 	for i, erra in enumerate(errs):
 		for j, errb in enumerate(errs):
-			B[i, j] = erra.ravel() @ errb.ravel()
+			B[i, j] = (erra.ravel()) @ errb.ravel()
 
 	
 	A = np.ones([n+1,n+1])
