@@ -1,5 +1,5 @@
 import numpy as np
-import psi4wrapper as p4w
+import SuperCoolFast as scf
 
 test_scf_param = { 
     'nel': "", 
@@ -23,9 +23,9 @@ def test_energies():
     """ 
     test for energies
     """
-    ao_ints, e_nuclear_repulsion, nel, nbf = p4w.init(test_scf_param)
+    ao_ints, e_nuclear_repulsion, nel, nbf = scf.init(test_scf_param)
 
-    eps, C, D, F = p4w.run(ao_ints, test_scf_param)
+    eps, C, D, F = scf.run(ao_ints, test_scf_param)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F+H)*D) + e_ZZ_repul
     if(test_scf_param['is_fitted']):
