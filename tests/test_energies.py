@@ -2,23 +2,6 @@ import numpy as np
 import SuperCoolFast as scf
 import os
 
-test_scf_param = {
-    'nel': "",
-    'nbas': "",
-    'conv': 5,
-    'opt': "None",
-    'max_nbf': 120,
-    'guess': "Core",
-    'max_iter': 100,
-    'charge': 0,
-    'basis': 'sto-3g',
-    'is_fitted': True,
-    'geometry': '''
-    O
-    H   1   1.1
-    H   1   1.1 2   104
-    '''
-}
 
 def test_energies():
     """
