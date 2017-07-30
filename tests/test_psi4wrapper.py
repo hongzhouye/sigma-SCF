@@ -16,6 +16,7 @@ test_scf_param = {
     'max_iter': 100,
     'charge': 0,
     'basis': 'sto-3g',
+    'is_fitted': True,
     'geometry': '''
     O
     H   1   1.1
