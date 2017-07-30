@@ -3,7 +3,10 @@ The Hartree-Fock driver.
 Performs a Hartree-Fock calculation on a given molecule.
 """
 import numpy as np
+import os, sys
+sys.path.append(os.path.dirname(__file__))
 from scf_utils import *
+sys.path.pop()
 from collections import deque
 
 
