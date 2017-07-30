@@ -9,5 +9,9 @@ if __name__ == "__main__":
     eps, C, D, F = scf(ao_ints, scf_params)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F + H) * D) + e_ZZ_repul
-    print("FINAL ENERGY: {}\n".format(energy))
+    print("\nFINAL SCF ENERGY: {}\n".format(energy))
 
+    # mp2
+    import mp2
+    print("SCS-MP2 Correlation Energy: {}\n".format(mp2.get_mp2_energy(\
+        eps, C, ao_ints['g4'], scf_params['nel'])))

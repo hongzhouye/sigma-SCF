@@ -39,17 +39,6 @@ def scf(ao_int, scf_params):
         - max_iter[int] max # of SCF iterations
                         CHECK: positive integers
     """
-    # unpack ao_int
-    T = ao_int['T']
-    V = ao_int['V']
-    g = ao_int['g']
-    S = ao_int['S']
-    A = ao_int['A']
-    F = None
-
-    # build Hcore (T and V are not needed in scf)
-    H = T + V
-
     # unpack scf_params
     nel = scf_params['nel']
     nbas = scf_params['nbas']
@@ -58,6 +47,18 @@ def scf(ao_int, scf_params):
     max_nbf = scf_params['max_nbf']
     guess = scf_params['guess']
     max_iter = scf_params['max_iter']
+    is_fitted = scf_params['is_fitted']
+    
+    # unpack ao_int
+    T = ao_int['T']
+    V = ao_int['V']
+    g = ao_int['g3'] if is_fitted else ao_int['g4']
+    S = ao_int['S']
+    A = ao_int['A']
+    F = None
+
+    # build Hcore (T and V are not needed in scf)
+    H = T + V
 
     # initial guess (case insensitive)
     err = None

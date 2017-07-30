@@ -33,6 +33,7 @@ def init(scf_params):
         metric_JK = np.squeeze(metric_JK)
         # construct (P|(lambda)(sigma))
         g_3 = np.einsum('pq, qls->pls', metric_JK, mints_index_3)
+        ao_ints['g3'] = g_3
 
     nbf = mints.nbf()
     if (nbf > scf_params['max_nbf']):
@@ -41,10 +42,7 @@ def init(scf_params):
     ao_ints['V'] = np.array(mints.ao_potential())
     ao_ints['T'] = np.array(mints.ao_kinetic())
     ao_ints['S'] = np.array(mints.ao_overlap())
-    if(is_fitted):
-        ao_ints['g'] = g_3
-    else:
-        ao_ints['g'] = np.array(mints.ao_eri())
+    ao_ints['g4'] = np.array(mints.ao_eri())
 
     A = mints.ao_overlap()
     A.power(-0.5, 1.e-14)
