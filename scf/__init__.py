@@ -1,9 +1,7 @@
 """
-Initializes everything for the SCF program.
+Initializes everything for the scf module.
 """
 
 
 # import the HF driver
-from .init import *
-from .run import *
-from .clean import *
+from .scf import *

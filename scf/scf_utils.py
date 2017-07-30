@@ -1,5 +1,8 @@
 import numpy as np
+import os, sys
+sys.path.append(os.path.dirname(__file__))
 from diis_solver import diis_solver
+sys.path.pop()
 
 
 def get_dm(C, nel):

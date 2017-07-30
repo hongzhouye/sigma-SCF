@@ -17,8 +17,9 @@ test_scf_param = {
     'charge': 0,
     'basis': 'sto-3g',
     'geometry': '''
-    H
-    H   1   1.2
+    O
+    H   1   1.1
+    H   1   1.1 2   104
     '''
 }
 
