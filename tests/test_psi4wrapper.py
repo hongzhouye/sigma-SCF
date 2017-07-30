@@ -16,6 +16,7 @@ test_scf_param = {
     'max_iter': 100,
     'charge': 0,
     'basis': 'sto-3g',
+    'is_fitted': True,
     'geometry': '''
     O
     H   1   1.1
@@ -47,7 +48,8 @@ def test_psi4wrapper():
     # dimension check
     assert(T.shape == (nbf, nbf))
     assert(V.shape == (nbf, nbf))
-    assert(g.shape == (nbf, nbf, nbf, nbf))
+    if(not test_scf_param['is_fitted']):
+        assert(g.shape == (nbf, nbf, nbf, nbf))
     assert(S.shape == (nbf, nbf))
     assert(A.shape == (nbf, nbf))
 
