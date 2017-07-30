@@ -23,11 +23,11 @@ def test_energies():
     """ 
     test for energies
     """
-    ao_ints, e_nuclear_repulsion, nel, nbf = scf.init(test_scf_param)
+    ao_ints, test_scf_param, e_ZZ_repulsion = scf.init("test_scf_param.txt")
 
-    eps, C, D, F = scf.run(ao_ints, test_scf_param)
+    eps, C, D, F = scf.scf(ao_ints, test_scf_param)
     H = ao_ints['T'] + ao_ints['V']
-    energy = np.sum((F+H)*D) + e_ZZ_repul
+    energy = np.sum((F+H)*D) + e_ZZ_repulsion
     if(test_scf_param['is_fitted']):
         assert(abs(energy-(-74.9421760949686870)) < 1e-6)
     
