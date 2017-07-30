@@ -18,8 +18,20 @@ def init(scf_params):
     mol = psi4.geometry(mol_geometry)
     mol.update_geometry()
     bas = psi4.core.BasisSet.build(mol, target=basis)
-    aux_bas = psi4.core.BasisSet.build(mol, fitrole="JKFIT", other=basis)
     mints = psi4.core.MintsHelper(bas)
+
+    # build the 3-index ERIs for density fitting of JK
+    aux_bas = psi4.core.BasisSet.build(mol, fitrole="JKFIT", other=basis)
+    zero_bas = psi4.core.BasisSet.zero_ao_basis_set()
+    mints_index_3 = mints.ao_eri(zero_bas, aux_bas, bas, bas)
+    mints_index_3 = np.squeeze(mints_index_3)
+    # build JK metric and invert
+    metric_JK = mints.ao_eri(zero_bas, aux_bas, zero_bas, aux_bas)
+    metric_JK.power(-0.5, 1.e-14)
+    metric_JK = np.squeeze(metric_JK)
+    # construct (P|(lambda)(sigma))
+    g_3 = np.einsum('pq, qls->pls', metric_JK, mints_index_3)
+    print(g_3)
 
     nbf = mints.nbf()
     if (nbf > scf_params['max_nbf']):
@@ -29,6 +41,7 @@ def init(scf_params):
     ao_ints['T'] = np.array(mints.ao_kinetic())
     ao_ints['S'] = np.array(mints.ao_overlap())
     ao_ints['g'] = np.array(mints.ao_eri())
+    ao_ints['g-3'] = g_3
 
     A = mints.ao_overlap()
     A.power(-0.5, 1.e-14)
