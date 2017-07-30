@@ -48,9 +48,7 @@ def test_psi4wrapper():
     # dimension check
     assert(T.shape == (nbf, nbf))
     assert(V.shape == (nbf, nbf))
-    if(test_scf_param['is_fitted']):
-        assert(g.shape == (nbf, nbf, nbf))
-    else:
+    if(not test_scf_param['is_fitted']):
         assert(g.shape == (nbf, nbf, nbf, nbf))
     assert(S.shape == (nbf, nbf))
     assert(A.shape == (nbf, nbf))
