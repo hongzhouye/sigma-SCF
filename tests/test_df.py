@@ -3,6 +3,7 @@ Tests for DF verison of get_JK
 """
 
 import SuperCoolFast as scf
+import numpy as np
 import os
 
 

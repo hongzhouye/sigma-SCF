@@ -13,7 +13,6 @@ def get_dm(C, nel):
 
 def get_JK(is_fitted, g, D):
     if(is_fitted):
-        print (g.shape)
         # FINISH LATER
         X = np.einsum("Pls,ls->P", g, D)
         J = np.einsum("mnP,P->mn", np.swapaxes(g, 0, 2), X)
