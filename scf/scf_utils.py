@@ -23,7 +23,7 @@ def get_JK(is_fitted, g, D):
 def get_fock(H, g, D, opt, F_prev_list, r_prev_list):
     opt = opt.upper()
     # not accelerated
-    if(opt == 'NONE' or len(F_prev_list) == 0):
+    if(opt == 'NONE' or len(F_prev_list) <= 1):
         J, K = get_JK(False, g, D)
         return H + 2 * J - K
     # DIIS

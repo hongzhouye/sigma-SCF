@@ -61,6 +61,7 @@ def scf(ao_int, scf_params):
     if guess.upper() == "CORE":
         eps, C = diag(H, A)
         D = get_dm(C, nel)
+        F = get_fock(H, g, D, 'NONE', [], [])
         err, err_v = get_SCF_err(S, D, H)
     else:
         raise Exception("Currently only core guess is supported!")
@@ -69,28 +70,28 @@ def scf(ao_int, scf_params):
     max_prev_count = 1
     if(opt.upper() == 'DIIS'):
         max_prev_count = 10
-    #F_prev_list = deque(H, max_prev_count)
     F_prev_list = deque([], max_prev_count)
-    #r_prev_list = deque(err_v, max_prev_count)
     r_prev_list = deque([], max_prev_count)
 
     # SCF loop
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
-        # get F
-        F_initial = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
-
-        # calculate error
-        err, err_v = get_SCF_err(S, D, F_initial)
-        r_prev_list.append(err_v)
-
         # diag and update density matrix
-        eps, C = diag(F_initial, A)
+        eps, C = diag(F, A)
         D = get_dm(C, nel)
 
+        # get F
         F = get_fock(H, g, D, 'NONE', F_prev_list, r_prev_list)
-        #F = F_initial
+
+        # calculate error
+        err, err_v = get_SCF_err(S, D, F)
+
+        # update F_prev_list and r_prev_list
         F_prev_list.append(F)
+        r_prev_list.append(err_v)
+
+        # diis update
+        F = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
 
         # print iteratoin info
         print("iter: {0:2d}, err: {1:0.5E}".format(iteration, err))
