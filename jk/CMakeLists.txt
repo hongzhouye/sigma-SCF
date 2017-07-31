@@ -11,6 +11,9 @@ endif()
 # (rather the the python inside the sss environment)
 set(PYTHON_EXECUTABLE $ENV{CONDA_PREFIX}/bin/python3)
 
+# CXX flags
+set (CMAKE_CXX_FLAGS "-Ofast")
+
 # Find the pybind11 in the conda path
 set(PYBIND11_CPP_STANDARD -std=c++11)
 find_package(pybind11 CONFIG REQUIRED

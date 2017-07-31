@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <lawrap/blas.h>
 #include <string>
 #include <iostream>
 
@@ -33,15 +34,24 @@ py::array_t<double> getJ_np(py::array_t<double> g,
     const double* D_data = static_cast<double*>(D_info.ptr);
     std::vector<double> J_data(nbas * nbas);
 
+    std::vector<double> gvec(nbas * nbas);
+    //std::vector<double> Dvec(nbas * nbas);
+
     for(size_t i = 0; i < nbas; i++)
-    for(size_t j = 0; j < nbas; j++)
+    for(size_t j = 0; j <= i; j++)
     {
-        double val1 = 0., val2 = 0.;
+        double val = LAWrap::dot(nbas * nbas, D_data, 1,
+            &g_data[i * s1 + j * s2], 1);
+        /*double val = 0.;
+        int ind = i * s1 + j * s2;
         for (size_t k = 0; k < nbas; k++)
-        for (size_t l = 0; l < nbas; l++)
-            val1 += g_data[i * s1 + j * s2 + k * s3 + l * s4]
+        for (size_t l = 0; l <= k; l++)
+        {
+            double fac = (k == l) ? (1.) : (2.);
+            val += fac * g_data[ind + k * s3 + l * s4]
                 * D_data[k * nbas + l];
-        J_data[i * nbas + j] = val1;
+        }*/
+        J_data[i * nbas + j] = J_data[j * nbas + i] = val;
     }
 
     py::buffer_info J_buf =
