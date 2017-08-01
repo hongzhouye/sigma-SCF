@@ -51,3 +51,26 @@ def diag(F, A):
 
 def get_SCF_err(S, D, F):
     return (np.sum(np.abs(S @ D @ F - F @ D @ S)), (S @ D @ F - F @ D @ S))
+
+
+def xform_2(H, A):
+    """
+    Basis xform for 2-tensor
+    """
+    if len(H.shape) != 2:
+        raise Exception("Dimension error: arg1 should be a matrix")
+
+    return A.T @ H @ A
+
+
+def xform_4(g, A):
+    """
+    Basis xform for 4-tensor
+    """
+    if len(g.shape) != 4:
+        raise Exception("""
+            Dimension error: arg1 should be a four-tensor.
+            Note that you should set is_fitted to be False.
+        """)
+        
+    return np.einsum("ip, jq, pqrs, rk, sl -> ijkl", A, A, g, A, A, optimize=True)
