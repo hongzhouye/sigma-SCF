@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(__file__))
 from diis_solver import diis_solver
 sys.path.pop()
 import jk
+import xform
 
 
 def get_dm(C, nel):
@@ -73,4 +74,5 @@ def xform_4(g, A):
             Note that you should set is_fitted to be False.
         """)
         
-    return np.einsum("ip, jq, pqrs, rk, sl -> ijkl", A, A, g, A, A, optimize=True)
+    #return np.einsum("ip, jq, pqrs, rk, sl -> ijkl", A, A, g, A, A, optimize=True)
+    return xform.xform_4_np(g, A)
