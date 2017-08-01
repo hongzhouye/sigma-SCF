@@ -12,7 +12,6 @@ endif()
 set(PYTHON_EXECUTABLE $ENV{CONDA_PREFIX}/bin/python3)
 
 # CXX flags
-set(CMAKE_CXX_COMPILER "g++-6")
 set (CMAKE_CXX_FLAGS "-Ofast -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -fopenmp -I${CONDA_PREFIX}/include")
 
 # Find the pybind11 in the conda path
