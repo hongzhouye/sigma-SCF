@@ -12,6 +12,7 @@ if __name__ == "__main__":
     print("\nFINAL SCF ENERGY: {}\n".format(energy))
 
     # mp2
-    import mp2
-    print("SCS-MP2 Correlation Energy: {}\n".format(mp2.get_mp2_energy(\
-        eps, C, ao_ints['g4'], scf_params['nel'])))
+    if(scf_params['method'] == "MP2"):
+       import mp2
+       print("SCS-MP2 Correlation Energy: {}\n".format(mp2.get_mp2_energy(\
+           eps, C, ao_ints['g4'], scf_params['nel'])))
