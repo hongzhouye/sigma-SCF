@@ -22,7 +22,7 @@ def test_xform():
     A = ao_ints['A']
     ao_ints['T'] = scf.xform_2(ao_ints['T'], A)
     ao_ints['V'] = scf.xform_2(ao_ints['V'], A)
-    ao_ints['g4'] = scf.xform_4_np(ao_ints['g4'], A)
+    ao_ints['g4'] = scf.xform_4(ao_ints['g4'], A)
     ao_ints['S'] = np.eye(A.shape[0])
     ao_ints['A'] = np.eye(A.shape[0])
     eps, C, D, F = scf.scf(ao_ints, scf_params)
