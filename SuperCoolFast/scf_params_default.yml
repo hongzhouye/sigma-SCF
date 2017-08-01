@@ -16,6 +16,8 @@ charge:
      0
 is_fitted:
      True
+method:
+     "SCF"
 
 basis:
     "cc-pvdz"
