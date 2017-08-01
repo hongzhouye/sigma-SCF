@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# pybind11
+*/Makefile
+*/CMakeCache.txt
+*/CMakefiles
+*/cmake_install.cmake
