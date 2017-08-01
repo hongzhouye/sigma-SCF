@@ -96,6 +96,7 @@ py::tuple getJK_np_Dshift(py::array_t<double> g,
     std::vector<double> J_data(nbas * nbas);
     std::vector<double> K_data(nbas * nbas);
 
+#pragma omp parallel for schedule(dynamic)
     for(size_t i = 0; i < nbas; i++)
     for(size_t j = 0; j <= i; j++)
     {
