@@ -3,6 +3,7 @@ import os, sys
 sys.path.append(os.path.dirname(__file__))
 from diis_solver import diis_solver
 sys.path.pop()
+import jk
 
 
 def get_dm(C, nel):
@@ -20,8 +21,9 @@ def get_JK(is_fitted, g, D):
         K = np.einsum('mlP,Pnl->mn', np.swapaxes(g, 0, 2), Z)
         return (J, K)
     else:
-        J = np.einsum("pqrs,rs->pq", g, D)
-        K = np.einsum("prqs,rs->pq", g, D)
+        #J = np.einsum("pqrs,rs->pq", g, D)
+        #K = np.einsum("prqs,rs->pq", g, D)
+        J, K = jk.getJK_np_Dshift(g, D - np.diag(np.diag(D) * 0.5))
         return (J, K)
 
 
