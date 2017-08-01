@@ -48,6 +48,7 @@ def scf(ao_int, scf_params):
     guess = scf_params['guess']
     max_iter = scf_params['max_iter']
     is_fitted = scf_params['is_fitted']
+    method = scf_params['method']
     
     # unpack ao_int
     T = ao_int['T']
@@ -106,6 +107,7 @@ def scf(ao_int, scf_params):
             print ("  ** SCF converges in %d iterations! **" % iteration)
             break
 
+    
 
     # post process
     if conv_flag:
