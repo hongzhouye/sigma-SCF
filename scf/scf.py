@@ -19,28 +19,41 @@ def scf(ao_int, scf_params):
         - S: ao_overlap
         - A: S^(-1/2)
     and parameters for SCF (scf_params [dict]):
-        - nel   [int]   # of electrons
+        - nel_alpha/beta
+                [int]   # of electrons
                         CHECK: non-negative, even integer
 
-        - nbas  [int]   # of basis functions
+        - nbas
+                [int]   # of basis functions
                         CHECK: 1. positive integer
                                2. consistent w/ T, V, g, ...
 
-        - conv  [int]   convg threshold (10E-conv) for ||[F, D]||
+        - conv
+                [int]   convg threshold (10E-conv) for ||[F, D]||
                         CHECK: positive integer less than 14
 
-        - opt   [str]   optimizer to accelerate SCF (case insensitive)
+        - opt
+                [str]   optimizer to accelerate SCF (case insensitive)
                         CHECK: must be from ['damping', 'diis', 'direct']
 
-        - max_nbf[int]  max # of basis functions (for memory concerned)
+        - max_nbf
+                [int]   max # of basis functions (for memory concerned)
 
-        - guess [str]   initial guess (currently only "core" is supported)
+        - guess
+                [str]   initial guess (currently only "core" is supported)
 
-        - max_iter[int] max # of SCF iterations
+        - max_iter
+                [int]   max # of SCF iterations
                         CHECK: positive integers
+
+        - is_fitted
+                [bool]  switch for density fitting
+
+        - unrestricted
+                [bool]  switch for breaking spin symmetry
     """
     # unpack scf_params
-    nel = scf_params['nel']
+    nel = scf_params['nel_alpha']
     nbas = scf_params['nbas']
     conv = 10. ** (-scf_params['conv'])
     opt = scf_params['opt']
@@ -49,14 +62,17 @@ def scf(ao_int, scf_params):
     max_iter = scf_params['max_iter']
     is_fitted = scf_params['is_fitted']
     method = scf_params['method']
-    
+    unrestricted = scf_params['unrestricted']
+    if unrestricted == True:
+        nelb = scf_params['nel_beta']
+        mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
+
     # unpack ao_int
     T = ao_int['T']
     V = ao_int['V']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
     S = ao_int['S']
     A = ao_int['A']
-    F = None
 
     # build Hcore (T and V are not needed in scf)
     H = T + V
@@ -67,6 +83,10 @@ def scf(ao_int, scf_params):
         eps, C = diag(H, A)
         D = get_dm(C, nel)
         F = get_fock(H, g, D, 'NONE', [], [])
+        if unrestricted:
+            Cb = homo_lumo_mix(C, nelb, mixing_beta)
+            Db = get_dm()
+            Fb = get_fock(H, g, Db, 'NONE', [], [])
     else:
         raise Exception("Currently only core guess is supported!")
 
@@ -76,6 +96,9 @@ def scf(ao_int, scf_params):
         max_prev_count = 10
     F_prev_list = deque([], max_prev_count)
     r_prev_list = deque([], max_prev_count)
+    if unrestricted:
+        Fb_prev_list = deque([], max_prev_count)
+        rb_prev_list = deque([], max_prev_count)
 
     # SCF loop
     conv_flag = False
@@ -83,6 +106,9 @@ def scf(ao_int, scf_params):
         # diag and update density matrix
         eps, C = diag(F, A)
         D = get_dm(C, nel)
+        if unrestricted:
+            epsb, Cb = diag(Fb, A)
+            Db = get_dm(Cb, nelb)
 
         # get F
         F = get_fock(H, g, D, 'NONE', F_prev_list, r_prev_list)
@@ -107,7 +133,7 @@ def scf(ao_int, scf_params):
             print ("  ** SCF converges in %d iterations! **" % iteration)
             break
 
-    
+
 
     # post process
     if conv_flag:
