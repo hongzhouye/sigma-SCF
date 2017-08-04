@@ -8,7 +8,7 @@ if __name__ == "__main__":
         version="0.0.0",
         description='A program that solves quantum chemistry problems.',
         author='Hongzhou Ye, Nadav Geva, Courtney Fitzgerald, Shannon Houck',
-        url="https://github.com/MolSSI-SSS/QM_2017_SSS_Team3",
+        url="https://github.com/hongzhouye/sigma-SCF",
         license='BSD-3C',
         packages=setuptools.find_packages(),
         install_requires=[
