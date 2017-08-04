@@ -9,7 +9,7 @@ def test_mp2():
     test for energies
     """
     ao_ints, test_scf_param, e_ZZ_repulsion = scf.init(\
-        os.path.dirname(__file__) + "/test_energies.yml")
+        os.path.dirname(__file__) + "/test_mp2.yml")
     eps, C, D, F = scf.scf(ao_ints, test_scf_param)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F+H)*D) + e_ZZ_repulsion
@@ -37,6 +37,6 @@ def test_mp2():
     eps, C, D, F = scf.scf(ao_ints, test_scf_param)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F+H)*D) + e_ZZ_repulsion
-    energy_corr = mp2.get_mp2_energy(eps, C, ao_ints['g4'], test_scf_param['nel'])
+    energy_corr = mp2.get_mp2_energy(\
+        eps, C, ao_ints['g4'], test_scf_param['nel_alpha'])
     assert(np.allclose(energy + energy_corr, psi4_energy_MP2) == True)
-
