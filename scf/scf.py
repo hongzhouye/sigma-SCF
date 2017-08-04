@@ -129,7 +129,7 @@ def rhf(ao_int, scf_params, e_nuc):
 
         # print iteratoin info
         print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
-            iteration, energy, errtot))
+            iteration, energy, err))
 
         # check convergence
         if err < conv:
