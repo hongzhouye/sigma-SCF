@@ -10,6 +10,8 @@ max_iter:
      120
 charge:
     0
+unrestricted:
+    False
 
 is_fitted:
     False

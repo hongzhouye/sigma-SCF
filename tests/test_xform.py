@@ -22,7 +22,7 @@ def test_xform():
     H = ao_ints['T'] + ao_ints['V']
     g = ao_ints['g4']
     nbas = scf_params['nbas']
-    nel = scf_params['nel']
+    nel = scf_params['nel_alpha']
     # w/o xform
     eps, C, D, F = scf.scf(ao_ints, scf_params)
     energy1 = np.sum((F + H) * D) + e_ZZ_repul
