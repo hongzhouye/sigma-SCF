@@ -7,6 +7,16 @@ import jk
 import xform
 
 
+def homo_lumo_mix(C, nocc, beta):
+    """
+    Mix a portion of LUMO to HOMO.
+    Used when generating spin-unrestricted guess.
+    """
+    C[:, nocc - 1] = np.sqrt(1. - beta) * C[:, nocc - 1] +\
+        np.sqrt(beta) * C[:, nocc]
+    return C
+
+
 def get_dm(C, nel):
     D = C[:, :nel]
     D = D @ D.T
