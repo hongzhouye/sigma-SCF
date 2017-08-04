@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3/branch/master/graph/badge.svg)](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3)
 
 
-# QM_2017_SSS_Team3
+# sigma-SCF
 
 ## Hongzhou Ye
 Hi! This is Hongzhou from MIT. I am doing method development in electronic structure theory. Specifically we are developing methods for molecular systems w/ strong correlation.
