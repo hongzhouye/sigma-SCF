@@ -14,7 +14,7 @@ def test_df():
     # out code
     ao_ints, scf_params, e_ZZ_repul = \
         scf.init(os.path.dirname(__file__) + '/test_df.yml')
-    eps, C, D, F = scf.scf(ao_ints, scf_params)
+    eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
     H = ao_ints['T'] + ao_ints['V']
     energy = np.sum((F + H) * D) + e_ZZ_repul
 
