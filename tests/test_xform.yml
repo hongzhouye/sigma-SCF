@@ -15,7 +15,7 @@ is_fitted:
     False
 
 basis:
-    "cc-pvdz"
+    "sto-3g"
 
 geometry:
 |

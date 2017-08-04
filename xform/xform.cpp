@@ -12,7 +12,26 @@ py::array_t<double> xform_4_np(py::array_t<double> g,
 /*
  * Given a numpy four-tensor g and xform matrix A
  * do the basis set xform
- * [NOTE] A is symmetric.
+ *
+ * [NOTE] A does not have to be symmetric.
+ *
+ * [NOTE] g is in CHEMISTS' notation:
+ *      (A^*)_pi (A^*)_rk g^phys_prqs A_qj A_sl
+ *    = (A.T)_ip (A.T)_kr g_pqrs A_qj A_sl
+ *    = (A.T)_ip A_qj g_pqrs (A.T)_kr A_sl
+ * STEP1:
+ *      (X_pq)_rs = g_pqrs
+ *      gx_pqkl = (A.T @ X_pq @ A)_kl
+ * STEP2:
+ *      (X_kl)_pq = gx_pqkl
+ *      gx_ijkl = (A.T @ X_kl @ A)_ij
+ *
+ * [NOTE] lawrap is a wrapper for Fortran blas library, which
+ *        assumes a COLUMN MAJOR storage, which is different
+ *        then the usual ROW MAJOR storage style in C++. Thus
+ *        one must be very careful when calling LAWrap::gemm.
+ *        Make sure to test it on ASYMMETRIC matrix where the
+ *        difference b/w two storage styles is obvious.
  */
 {
     py::buffer_info g_info = g.request();
@@ -40,6 +59,7 @@ py::array_t<double> xform_4_np(py::array_t<double> g,
     std::vector<double> X(nbas * nbas);
     std::vector<double> Y(nbas * nbas);
     std::vector<double> gx(nbas * nbas * nbas * nbas);
+    // See discussion above on how to call LAWrap::gemm.
     for(size_t p = 0; p < nbas; p++)
     for(size_t q = 0; q <= p; q++)
     {
@@ -49,18 +69,18 @@ py::array_t<double> xform_4_np(py::array_t<double> g,
             // X_rs = V_pqrs
             X[r * nbas + s] = X[s * nbas + r] = g_data[ind + r * s3 + s * s4];
         // Y = X * A
-        LAWrap::gemm('N', 'N', nbas, nbas, nbas,
+        LAWrap::gemm('T', 'T', nbas, nbas, nbas,
             1., X.data(), nbas, A_data, nbas, 0., Y.data(), nbas);
         // X = A.T * Y
-        LAWrap::gemm('T', 'N', nbas, nbas, nbas,
-            1., A_data, nbas, Y.data(), nbas, 0., X.data(), nbas);
+        LAWrap::gemm('T', 'T', nbas, nbas, nbas,
+            1., Y.data(), nbas, A_data, nbas, 0., X.data(), nbas);
         for(size_t k = 0; k < nbas; k++)
         for(size_t l = 0; l <= k; l++)
             gx[ind + k * s3 + l * s4] = gx[ind + l * s3 + k * s4] =
             gx[ind2 + k * s3 + l * s4] = gx[ind2 + l * s3 + k * s4] =
                 X[k * nbas + l];
     }
-
+    std::cout << "\t** STOP **" << std::endl;
     for(size_t k = 0; k < nbas; k++)
     for(size_t l = 0; l <= k; l++)
     {
@@ -70,11 +90,11 @@ py::array_t<double> xform_4_np(py::array_t<double> g,
             // X_pq = gx_pqkl
             X[p * nbas + q] = X[q * nbas + p] = gx[p * s1 + q * s2 + ind];
         // Y = X * A.T
-        LAWrap::gemm('N', 'T', nbas, nbas, nbas,
+        LAWrap::gemm('T', 'T', nbas, nbas, nbas,
             1., X.data(), nbas, A_data, nbas, 0., Y.data(), nbas);
         // X = A * Y
-        LAWrap::gemm('N', 'N', nbas, nbas, nbas,
-            1., A_data, nbas, Y.data(), nbas, 0., X.data(), nbas);
+        LAWrap::gemm('T', 'T', nbas, nbas, nbas,
+            1., Y.data(), nbas, A_data, nbas, 0., X.data(), nbas);
         for(size_t i = 0; i < nbas; i++)
         for(size_t j = 0; j <= i; j++)
             gx[i * s1 + j * s2 + ind] = gx[j * s1 + i * s2 + ind] =
