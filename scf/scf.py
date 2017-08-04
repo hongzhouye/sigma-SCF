@@ -12,7 +12,7 @@ from collections import deque
 np.set_printoptions(suppress=True, precision=3)
 
 
-def scf(ao_int, scf_params):
+def scf(ao_int, scf_params, e_nuc):
     """
     Solve the SCF problem given AO integrals (ao_int [dict]):
         - T: ao_kinetic
@@ -56,12 +56,12 @@ def scf(ao_int, scf_params):
     """
     # rhf or uhf
     if scf_params['unrestricted'] == True:
-        return uhf(ao_int, scf_params)
+        return uhf(ao_int, scf_params, e_nuc)
     else:
-        return rhf(ao_int, scf_params)
+        return rhf(ao_int, scf_params, e_nuc)
 
 
-def rhf(ao_int, scf_params):
+def rhf(ao_int, scf_params, e_nuc):
     """
     Spin-restricted Hartree-Fock
     """
@@ -89,7 +89,9 @@ def rhf(ao_int, scf_params):
     # initial guess (case insensitive)
     err = None
     if guess.upper() == "CORE":
-        eps, C = diag(H, A)
+        dH = np.diag(H)
+        F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
+        eps, C = diag(F, A)
         D = get_dm(C, nel)
         F = get_fock(H, g, D, 'NONE', [], [])
     else:
@@ -122,8 +124,12 @@ def rhf(ao_int, scf_params):
         # diis update
         F = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
 
+        # get energy
+        energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
+
         # print iteratoin info
-        print("iter: {0:2d}, err: {1:0.5E}".format(iteration, err))
+        print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
+            iteration, energy, errtot))
 
         # check convergence
         if err < conv:
@@ -142,7 +148,7 @@ def rhf(ao_int, scf_params):
                          % max_iter)
 
 
-def uhf(ao_int, scf_params):
+def uhf(ao_int, scf_params, e_nuc):
     """
     Spin-unrestricted Hartree-Fock
     """
@@ -173,6 +179,14 @@ def uhf(ao_int, scf_params):
     # initial guess (case insensitive)
     if guess.upper() == "CORE":
         eps, C = diag(H, A)
+        D = get_dm(C, nel)
+        Cb = homo_lumo_mix(C, nelb, mixing_beta)
+        Db = get_dm(Cb, nelb)
+        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+    elif guess.upper() == "HUCKEL":
+        dH = np.diag(H)
+        F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
+        eps, C = diag(F, A)
         D = get_dm(C, nel)
         Cb = homo_lumo_mix(C, nelb, mixing_beta)
         Db = get_dm(Cb, nelb)
@@ -218,8 +232,12 @@ def uhf(ao_int, scf_params):
                 [F_prev_list, Fb_prev_list], \
                 [r_prev_list, rb_prev_list])
 
+        # get energy
+        energy = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
+
         # print iteratoin info
-        print("iter: {0:2d}, err: {1:0.5E}".format(iteration, errtot))
+        print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
+            iteration, energy, errtot))
 
         # check convergence
         if errtot < conv:
@@ -238,19 +256,3 @@ def uhf(ao_int, scf_params):
     else:
         raise Exception ("  ** SCF fails to converge in %d iterations! **"
                          % max_iter)
-
-
-def get_SCF_energy(ao_ints, F, D, unrestricted):
-    """
-    Calculates the energy.
-    """
-    H = ao_ints['T'] + ao_ints['V']
-    if unrestricted == True:
-        if type(F) is not list or type(D) is not list:
-            raise Exception("For UHF, F and D must have type list.")
-        Fa, Fb = F[0], F[1]
-        Da, Db = D[0], D[1]
-        Dtot = Da + Db
-        return np.sum(Dtot * H + Da * Fa + Db * Fb) * 0.5
-    else:
-        return np.sum((H + F) * D)
