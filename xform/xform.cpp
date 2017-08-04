@@ -80,7 +80,7 @@ py::array_t<double> xform_4_np(py::array_t<double> g,
             gx[ind2 + k * s3 + l * s4] = gx[ind2 + l * s3 + k * s4] =
                 X[k * nbas + l];
     }
-    std::cout << "\t** STOP **" << std::endl;
+
     for(size_t k = 0; k < nbas; k++)
     for(size_t l = 0; l <= k; l++)
     {
