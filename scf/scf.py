@@ -9,6 +9,8 @@ from scf_utils import *
 sys.path.pop()
 from collections import deque
 
+np.set_printoptions(suppress=True, precision=3)
+
 
 def scf(ao_int, scf_params):
     """
@@ -52,6 +54,17 @@ def scf(ao_int, scf_params):
         - unrestricted
                 [bool]  switch for breaking spin symmetry
     """
+    # rhf or uhf
+    if scf_params['unrestricted'] == True:
+        return uhf(ao_int, scf_params)
+    else:
+        return rhf(ao_int, scf_params)
+
+
+def rhf(ao_int, scf_params):
+    """
+    Spin-restricted Hartree-Fock
+    """
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nbas = scf_params['nbas']
@@ -62,10 +75,6 @@ def scf(ao_int, scf_params):
     max_iter = scf_params['max_iter']
     is_fitted = scf_params['is_fitted']
     method = scf_params['method']
-    unrestricted = scf_params['unrestricted']
-    if unrestricted == True:
-        nelb = scf_params['nel_beta']
-        mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
 
     # unpack ao_int
     T = ao_int['T']
@@ -83,10 +92,6 @@ def scf(ao_int, scf_params):
         eps, C = diag(H, A)
         D = get_dm(C, nel)
         F = get_fock(H, g, D, 'NONE', [], [])
-        if unrestricted:
-            Cb = homo_lumo_mix(C, nelb, mixing_beta)
-            Db = get_dm()
-            Fb = get_fock(H, g, Db, 'NONE', [], [])
     else:
         raise Exception("Currently only core guess is supported!")
 
@@ -96,9 +101,6 @@ def scf(ao_int, scf_params):
         max_prev_count = 10
     F_prev_list = deque([], max_prev_count)
     r_prev_list = deque([], max_prev_count)
-    if unrestricted:
-        Fb_prev_list = deque([], max_prev_count)
-        rb_prev_list = deque([], max_prev_count)
 
     # SCF loop
     conv_flag = False
@@ -106,9 +108,6 @@ def scf(ao_int, scf_params):
         # diag and update density matrix
         eps, C = diag(F, A)
         D = get_dm(C, nel)
-        if unrestricted:
-            epsb, Cb = diag(Fb, A)
-            Db = get_dm(Cb, nelb)
 
         # get F
         F = get_fock(H, g, D, 'NONE', F_prev_list, r_prev_list)
@@ -126,13 +125,13 @@ def scf(ao_int, scf_params):
         # print iteratoin info
         print("iter: {0:2d}, err: {1:0.5E}".format(iteration, err))
 
-
         # check convergence
         if err < conv:
             conv_flag = True
             print ("  ** SCF converges in %d iterations! **" % iteration)
+            eps, C = diag(F, A)
+            D = get_dm(C, nel)
             break
-
 
 
     # post process
@@ -143,8 +142,115 @@ def scf(ao_int, scf_params):
                          % max_iter)
 
 
-def energy():
+def uhf(ao_int, scf_params):
+    """
+    Spin-unrestricted Hartree-Fock
+    """
+    # unpack scf_params
+    nel = scf_params['nel_alpha']
+    nelb = scf_params['nel_beta']
+    nbas = scf_params['nbas']
+    conv = 10. ** (-scf_params['conv'])
+    opt = scf_params['opt']
+    max_nbf = scf_params['max_nbf']
+    guess = scf_params['guess']
+    max_iter = scf_params['max_iter']
+    is_fitted = scf_params['is_fitted']
+    method = scf_params['method']
+    unrestricted = scf_params['unrestricted']
+    mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
+
+    # unpack ao_int
+    T = ao_int['T']
+    V = ao_int['V']
+    g = ao_int['g3'] if is_fitted else ao_int['g4']
+    S = ao_int['S']
+    A = ao_int['A']
+
+    # build Hcore (T and V are not needed in scf)
+    H = T + V
+
+    # initial guess (case insensitive)
+    if guess.upper() == "CORE":
+        eps, C = diag(H, A)
+        D = get_dm(C, nel)
+        Cb = homo_lumo_mix(C, nelb, mixing_beta)
+        Db = get_dm(Cb, nelb)
+        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+    else:
+        raise Exception("Currently only core guess is supported!")
+
+    # initialize storage of errors and previous Fs if we're doing DIIS
+    max_prev_count = 1
+    if(opt.upper() == 'DIIS'):
+        max_prev_count = 10
+    F_prev_list = deque([], max_prev_count)
+    r_prev_list = deque([], max_prev_count)
+    Fb_prev_list = deque([], max_prev_count)
+    rb_prev_list = deque([], max_prev_count)
+
+    # SCF loop
+    conv_flag = False
+    for iteration in range(1,(max_iter+1)):
+        # diag and update density matrix
+        eps, C = diag(F, A)
+        D = get_dm(C, nel)
+        epsb, Cb = diag(Fb, A)
+        Db = get_dm(Cb, nelb)
+
+        # get F
+        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+
+        # calculate error
+        err, err_v = get_SCF_err(S, D, F)
+        errb, errb_v = get_SCF_err(S, Db, Fb)
+        errtot = (err + errb) * 0.5
+
+        # update F_prev_list and r_prev_list
+        F_prev_list.append(F)
+        r_prev_list.append(err_v)
+        Fb_prev_list.append(Fb)
+        rb_prev_list.append(errb_v)
+
+        # diis update
+        if opt.upper() == 'DIIS':
+            F, Fb = get_fock_uhf(H, g, [D, Db], 'DIIS', \
+                [F_prev_list, Fb_prev_list], \
+                [r_prev_list, rb_prev_list])
+
+        # print iteratoin info
+        print("iter: {0:2d}, err: {1:0.5E}".format(iteration, errtot))
+
+        # check convergence
+        if errtot < conv:
+            conv_flag = True
+            print ("  ** SCF converges in %d iterations! **" % iteration)
+            eps, C = diag(F, A)
+            D = get_dm(C, nel)
+            epsb, Cb = diag(Fb, A)
+            Db = get_dm(Cb, nelb)
+            break
+
+
+    # post process
+    if conv_flag:
+        return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
+    else:
+        raise Exception ("  ** SCF fails to converge in %d iterations! **"
+                         % max_iter)
+
+
+def get_SCF_energy(ao_ints, F, D, unrestricted):
     """
     Calculates the energy.
     """
-    pass
+    H = ao_ints['T'] + ao_ints['V']
+    if unrestricted == True:
+        if type(F) is not list or type(D) is not list:
+            raise Exception("For UHF, F and D must have type list.")
+        Fa, Fb = F[0], F[1]
+        Da, Db = D[0], D[1]
+        Dtot = Da + Db
+        return np.sum(Dtot * H + Da * Fa + Db * Fb) * 0.5
+    else:
+        return np.sum((H + F) * D)
