@@ -43,6 +43,8 @@ def init(input_file):
     else:
         scf_params['nel_alpha'] = int((n_el_tot + n_el_diff) / 2)
         scf_params['nel_beta'] = int((n_el_tot - n_el_diff) / 2)
+    if scf_params['spin'] is not 1:     # if not singlet
+        scf_params['unrestricted'] = True
     scf_params['nbas'] = n_basis
     print(scf_params)
     return ao_ints, scf_params, e_ZZ_repul

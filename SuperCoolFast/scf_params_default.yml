@@ -16,6 +16,10 @@ charge:
      0
 spin:
     1
+unrestricted:
+    False
+homo_lumo_mix:
+    0
 
 is_fitted:
      True
