@@ -11,12 +11,17 @@ def test_df():
     """
     Compare psi4 energy (w/ DF) and our energy (w/ DF)
     """
-    # out code
+    # rhf
     ao_ints, scf_params, e_ZZ_repul = \
         scf.init(os.path.dirname(__file__) + '/test_df.yml')
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    H = ao_ints['T'] + ao_ints['V']
-    energy = np.sum((F + H) * D) + e_ZZ_repul
+    energy_rhf = scf.get_SCF_energy(ao_ints, F, D, False) + e_ZZ_repul
+
+    # uhf
+    scf_params['unrestricted'] = True
+    scf_params['homo_lumo_mix'] = 0
+    eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
+    energy_uhf = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repul
 
     # psi4
     import psi4
@@ -34,4 +39,5 @@ def test_df():
     psi4_energy = psi4.energy("SCF/cc-pVDZ", molecule = mol)
 
     # check
-    assert(np.allclose(energy, psi4_energy) == True)
+    assert(np.allclose(energy_rhf, psi4_energy) == True)
+    assert(np.allclose(energy_uhf, psi4_energy) == True)
