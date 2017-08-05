@@ -5,6 +5,7 @@ coverage:
     - "tests/.*"
     - "setup.py"
     - "xform/check.py"
+    - "SuperCoolFast/SuperCoolFast.py"
   status:
     project: yes
     patch: yes
