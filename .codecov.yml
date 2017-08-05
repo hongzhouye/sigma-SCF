@@ -4,5 +4,8 @@ coverage:
   ignore:
     - "tests/.*"
     - "setup.py"
+    - "xform/check.py"
   status:
-patch: false
+    project: yes
+    patch: yes
+    changes: no
