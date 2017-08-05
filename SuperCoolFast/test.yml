@@ -1,15 +1,19 @@
 conv:
-     5
+     7
 opt:
      "DIIS"
 max_nbf:
      120
 guess:
-     "Core"
+     "Huckel"
 max_iter:
      120
 charge:
-    0
+    1
+spin:
+    2
+is_fitted:
+    False
 
 basis:
     "cc-pVDZ"
