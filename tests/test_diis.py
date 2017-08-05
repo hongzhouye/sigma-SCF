@@ -12,4 +12,4 @@ def test_diis():
     """
     ao_ints, scf_params, e_ZZ_repul = \
         scf.init(os.path.dirname(__file__) + '/test_diis.yml')
-    eps, C, D, F = scf.scf(ao_ints, scf_params)
+    eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)

@@ -1,33 +1,23 @@
-nel:
-    ""
-nbas:
-    ""
 conv:
      5
 opt:
-     "None"
+     "DIIS"
 max_nbf:
      120
 guess:
      "Core"
 max_iter:
-     100
+     120
 charge:
-     0
-spin:
-    1
+    0
 unrestricted:
     False
-homo_lumo_mix:
-    0
 
 is_fitted:
-     True
-method:
-     "SCF"
+    True
 
 basis:
-    "cc-pvdz"
+    "cc-pVDZ"
 
 geometry:
 |

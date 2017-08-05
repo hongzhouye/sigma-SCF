@@ -22,9 +22,9 @@ def test_xform():
     H = ao_ints['T'] + ao_ints['V']
     g = ao_ints['g4']
     nbas = scf_params['nbas']
-    nel = scf_params['nel']
+    nel = scf_params['nel_alpha']
     # w/o xform
-    eps, C, D, F = scf.scf(ao_ints, scf_params)
+    eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
     energy1 = np.sum((F + H) * D) + e_ZZ_repul
     # energy using MO basis
     H_mo = scf.xform_2(H, C)
@@ -41,7 +41,7 @@ def test_xform():
     ao_ints['g4'] = scf.xform_4(ao_ints['g4'], A)
     ao_ints['S'] = np.eye(A.shape[0])
     ao_ints['A'] = np.eye(A.shape[0])
-    eps, C, D, F = scf.scf(ao_ints, scf_params)
+    eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
     H = ao_ints['T'] + ao_ints['V']
     energy2 = np.sum((F + H) * D) + e_ZZ_repul
 
