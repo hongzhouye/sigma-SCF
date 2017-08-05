@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3.svg?branch=master)](https://travis-ci.org/MolSSI-SSS/QM_2017_SSS_Team3)
-[![codecov](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3/branch/master/graph/badge.svg)](https://codecov.io/gh/MolSSI-SSS/QM_2017_SSS_Team3)
+[![Build Status](https://travis-ci.org/hongzhouye/sigma-SCF.svg?branch=master)](https://travis-ci.org/hongzhouye/sigma-SCF)
+[![codecov](https://codecov.io/gh/hongzhouye/sigma-SCF/branch/master/graph/badge.svg)](https://codecov.io/gh/hongzhouye/sigma-SCF)
 
 
 # sigma-SCF
