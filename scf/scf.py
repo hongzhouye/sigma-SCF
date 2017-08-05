@@ -88,16 +88,16 @@ def rhf(ao_int, scf_params, e_nuc):
 
     # initial guess (case insensitive)
     if guess.upper() == "CORE":
-        eps, C = diag(H, A)
+        F = H
     elif guess.upper() == "HUCKEL":
         dH = np.diag(H)
         F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
-        eps, C = diag(F, A)
     elif guess.upper() == "RHF":
-        eps, C = diag(H, A)
+        F = H
     else:
         raise Exception("Keyword guess must be core, huckel or rhf.")
 
+    eps, C = diag(F, A)
     D = get_dm(C, nel)
     F = get_fock(H, g, D, 'FP', [], [])
 
@@ -126,7 +126,8 @@ def rhf(ao_int, scf_params, e_nuc):
         r_prev_list.append(err_v)
 
         # diis update
-        F = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
+        if opt.upper() is not 'NONE':
+            F = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
 
         # get energy
         energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
@@ -182,11 +183,10 @@ def uhf(ao_int, scf_params, e_nuc):
 
     # initial guess (case insensitive)
     if guess.upper() == "CORE":
-        eps, C = diag(H, A)
+        F = H
     elif guess.upper() == "HUCKEL":
         dH = np.diag(H)
         F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
-        eps, C = diag(F, A)
     elif guess.upper() == "RHF":
         scf_params['guess'] = 'huckel'
         eps, C, D, F = rhf(ao_int, scf_params, e_nuc)
@@ -194,6 +194,7 @@ def uhf(ao_int, scf_params, e_nuc):
     else:
         raise Exception("Keyword guess must be core, huckel or rhf.")
 
+    eps, C = diag(H, A)
     D = get_dm(C, nel)
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
@@ -232,7 +233,7 @@ def uhf(ao_int, scf_params, e_nuc):
         rb_prev_list.append(errb_v)
 
         # diis update
-        if opt.upper() == 'DIIS':
+        if opt.upper() is not 'NONE':
             F, Fb = get_fock_uhf(H, g, [D, Db], 'DIIS', \
                 [F_prev_list, Fb_prev_list], \
                 [r_prev_list, rb_prev_list])
