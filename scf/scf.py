@@ -99,7 +99,7 @@ def rhf(ao_int, scf_params, e_nuc):
 
     eps, C = diag(F, A)
     D = get_dm(C, nel)
-    F = get_fock(H, g, D, 'FP', [], [])
+    F = get_fock(H, g, D)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -111,12 +111,23 @@ def rhf(ao_int, scf_params, e_nuc):
     # SCF loop
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
+        # oda collect old Fock/DM/Energy
+        if opt.upper() == "ODA":
+            Dold, Fold, Eold = D, F, get_SCF_energy(ao_int, F, D, False)
+
         # diag and update density matrix
         eps, C = diag(F, A)
         D = get_dm(C, nel)
 
         # get F
-        F = get_fock(H, g, D, 'FP', F_prev_list, r_prev_list)
+        F = get_fock(H, g, D)
+
+        # oda: collect new Fock/DM/Energy
+        if opt.upper() == "ODA":
+            E = get_SCF_energy(ao_int, F, D, False)
+            lbd = oda_update(F - Fold, D - Dold, E - Eold)
+            D = lbd * D + (1. - lbd) * Dold
+            F = lbd * F + (1. - lbd) * Fold
 
         # calculate error
         err, err_v = get_SCF_err(S, D, F)
@@ -126,8 +137,8 @@ def rhf(ao_int, scf_params, e_nuc):
         r_prev_list.append(err_v)
 
         # diis update
-        if opt.upper() is not 'NONE':
-            F = get_fock(H, g, D, opt, F_prev_list, r_prev_list)
+        if opt.upper() == "DIIS":
+            F = diis_update(H, g, D, F_prev_list, r_prev_list)
 
         # get energy
         energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
@@ -140,8 +151,8 @@ def rhf(ao_int, scf_params, e_nuc):
         if err < conv:
             conv_flag = True
             print ("  ** R-SCF converges in %d iterations! **" % iteration)
-            eps, C = diag(F, A)
-            D = get_dm(C, nel)
+            #eps, C = diag(F, A)
+            #D = get_dm(C, nel)
             break
 
 

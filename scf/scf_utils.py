@@ -63,20 +63,36 @@ def get_JK_uhf(is_fitted, g, Ds):
         return Jtot, Ka, Kb
 
 
-def get_fock(H, g, D, opt, F_prev_list, r_prev_list):
-    opt = opt.upper()
-    # not accelerated
-    if(opt == 'FP' or len(F_prev_list) <= 1):
-        # Fixed point update
-        J, K = get_JK(len(g.shape) == 3, g, D)
-        return H + 2 * J - K
-    # DIIS
-    elif(opt == 'DIIS'):
+def get_fock(H, g, D):
+    J, K = get_JK(len(g.shape) == 3, g, D)
+    return H + 2 * J - K
+
+
+def diis_update(H, g, D, F_prev_list, r_prev_list):
+    """
+    DIIS update given previous Fock matrices and error vectors.
+    Note that if there are less than two F's, return normal F.
+    """
+    if(len(F_prev_list) <= 1):
+        return get_fock(H, g, D)
+    else:
         c = diis_solver(r_prev_list) # GET THE COEFFICIENTS!!
         out = 0 * H
         for i, element in enumerate(F_prev_list):
             out += c[i] * element
         return out
+
+
+def oda_update(dF, dD, dE):
+    """
+    ODA update:
+        lbd = 0.5 - dE / E_deriv
+    """
+    E_deriv = np.sum(dF * dD)
+    lbd = 0.5 * (1. - dE / E_deriv)
+    if lbd < 0 or lbd > 1:
+        lbd = 0.9999 if dE < 0 else 1.e-4
+    return lbd
 
 
 def get_fock_uhf(H, g, Ds, opt, F_prev_lists, r_prev_lists):
