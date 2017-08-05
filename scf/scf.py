@@ -96,7 +96,7 @@ def rhf(ao_int, scf_params, e_nuc):
     elif guess.upper() == "RHF":
         eps, C = diag(H, A)
     else:
-        raise Exception("Currently only core guess is supported!")
+        raise Exception("Keyword guess must be core, huckel or rhf.")
 
     D = get_dm(C, nel)
     F = get_fock(H, g, D, 'NONE', [], [])
@@ -138,7 +138,7 @@ def rhf(ao_int, scf_params, e_nuc):
         # check convergence
         if err < conv:
             conv_flag = True
-            print ("  ** SCF converges in %d iterations! **" % iteration)
+            print ("  ** R-SCF converges in %d iterations! **" % iteration)
             eps, C = diag(F, A)
             D = get_dm(C, nel)
             break
@@ -148,7 +148,7 @@ def rhf(ao_int, scf_params, e_nuc):
     if conv_flag:
         return eps, C, D, F
     else:
-        raise Exception ("  ** SCF fails to converge in %d iterations! **"
+        raise Exception ("  ** R-SCF fails to converge in %d iterations! **"
                          % max_iter)
 
 
@@ -192,7 +192,7 @@ def uhf(ao_int, scf_params, e_nuc):
         eps, C, D, F = rhf(ao_int, scf_params, e_nuc)
         scf_params['guess'] = 'rhf'
     else:
-        raise Exception("Currently only core guess is supported!")
+        raise Exception("Keyword guess must be core, huckel or rhf.")
 
     D = get_dm(C, nel)
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
@@ -247,7 +247,7 @@ def uhf(ao_int, scf_params, e_nuc):
         # check convergence
         if errtot < conv:
             conv_flag = True
-            print ("  ** SCF converges in %d iterations! **" % iteration)
+            print ("  ** U-SCF converges in %d iterations! **" % iteration)
             eps, C = diag(F, A)
             D = get_dm(C, nel)
             epsb, Cb = diag(Fb, A)
@@ -259,5 +259,5 @@ def uhf(ao_int, scf_params, e_nuc):
     if conv_flag:
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
-        raise Exception ("  ** SCF fails to converge in %d iterations! **"
+        raise Exception ("  ** U-SCF fails to converge in %d iterations! **"
                          % max_iter)
