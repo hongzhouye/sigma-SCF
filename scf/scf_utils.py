@@ -66,7 +66,8 @@ def get_JK_uhf(is_fitted, g, Ds):
 def get_fock(H, g, D, opt, F_prev_list, r_prev_list):
     opt = opt.upper()
     # not accelerated
-    if(opt == 'NONE' or len(F_prev_list) <= 1):
+    if(opt == 'FP' or len(F_prev_list) <= 1):
+        # Fixed point update
         J, K = get_JK(len(g.shape) == 3, g, D)
         return H + 2 * J - K
     # DIIS
@@ -90,7 +91,8 @@ def get_fock_uhf(H, g, Ds, opt, F_prev_lists, r_prev_lists):
         diis update
     """
     opt = opt.upper()
-    if(opt == 'NONE' or len(F_prev_lists[0]) <= 1):
+    if(opt == 'FP' or len(F_prev_lists[0]) <= 1):
+        # Fixed point update
         Jtot, Ka, Kb = get_JK_uhf(len(g.shape) == 3, g, Ds)
         return H + Jtot - Ka, H + Jtot - Kb
     elif opt == 'DIIS':

@@ -99,7 +99,7 @@ def rhf(ao_int, scf_params, e_nuc):
         raise Exception("Keyword guess must be core, huckel or rhf.")
 
     D = get_dm(C, nel)
-    F = get_fock(H, g, D, 'NONE', [], [])
+    F = get_fock(H, g, D, 'FP', [], [])
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -116,7 +116,7 @@ def rhf(ao_int, scf_params, e_nuc):
         D = get_dm(C, nel)
 
         # get F
-        F = get_fock(H, g, D, 'NONE', F_prev_list, r_prev_list)
+        F = get_fock(H, g, D, 'FP', F_prev_list, r_prev_list)
 
         # calculate error
         err, err_v = get_SCF_err(S, D, F)
@@ -197,7 +197,7 @@ def uhf(ao_int, scf_params, e_nuc):
     D = get_dm(C, nel)
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
-    F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+    F, Fb = get_fock_uhf(H, g, [D, Db], 'FP', [], [])
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -218,7 +218,7 @@ def uhf(ao_int, scf_params, e_nuc):
         Db = get_dm(Cb, nelb)
 
         # get F
-        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+        F, Fb = get_fock_uhf(H, g, [D, Db], 'FP', [], [])
 
         # calculate error
         err, err_v = get_SCF_err(S, D, F)
