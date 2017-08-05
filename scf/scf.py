@@ -87,13 +87,19 @@ def rhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
-    err = None
     if guess.upper() == "CORE":
+        eps, C = diag(H, A)
+        D = get_dm(C, nel)
+        F = get_fock(H, g, D, 'NONE', [], [])
+    elif guess.upper() == "HUCKEL":
         dH = np.diag(H)
         F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
         eps, C = diag(F, A)
         D = get_dm(C, nel)
         F = get_fock(H, g, D, 'NONE', [], [])
+    elif guess.upper() == "RHF":
+        raise Exception(\
+            "RHF guess is only applicable to unrestricted calculation.")
     else:
         raise Exception("Currently only core guess is supported!")
 
@@ -179,20 +185,21 @@ def uhf(ao_int, scf_params, e_nuc):
     # initial guess (case insensitive)
     if guess.upper() == "CORE":
         eps, C = diag(H, A)
-        D = get_dm(C, nel)
-        Cb = homo_lumo_mix(C, nelb, mixing_beta)
-        Db = get_dm(Cb, nelb)
-        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
     elif guess.upper() == "HUCKEL":
         dH = np.diag(H)
         F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
         eps, C = diag(F, A)
-        D = get_dm(C, nel)
-        Cb = homo_lumo_mix(C, nelb, mixing_beta)
-        Db = get_dm(Cb, nelb)
-        F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
+    elif guess.upper() == "RHF":
+        scf_params['guess'] = 'huckel'
+        eps, C, D, F = rhf(ao_int, scf_params, e_nuc)
+        scf_params['guess'] = 'rhf'
     else:
         raise Exception("Currently only core guess is supported!")
+
+    D = get_dm(C, nel)
+    Cb = homo_lumo_mix(C, nelb, mixing_beta)
+    Db = get_dm(Cb, nelb)
+    F, Fb = get_fock_uhf(H, g, [D, Db], 'NONE', [], [])
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
