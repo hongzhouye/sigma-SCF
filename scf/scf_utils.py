@@ -95,23 +95,19 @@ def oda_update(dF, dD, dE):
     return lbd
 
 
-def get_fock_uhf(H, g, Ds, opt, F_prev_lists, r_prev_lists):
+def get_fock_uhf(H, g, Ds):
     """
-    if opt == "NONE":
-        Get uhf Fock matrices via:
-            Fa = Hcore + J[Dtot] - K[Da]
-            Fb = Hcore + J[Dtot] - K[Db]
-        where
-            Dtot = Da + Db
+    DIIS update given previous Fock matrices and error vectors.
+    Note that if there are less than two F's, return normal F.
+    """
+    Jtot, Ka, Kb = get_JK_uhf(len(g.shape) == 3, g, Ds)
+    return H + Jtot - Ka, H + Jtot - Kb
+
+
+def diis_update_uhf(H, g, Ds, F_prev_lists, r_prev_lists):
+    if(len(F_prev_lists[0]) <= 1):
+        return get_fock_uhf(H, g, Ds)
     else:
-        diis update
-    """
-    opt = opt.upper()
-    if(opt == 'FP' or len(F_prev_lists[0]) <= 1):
-        # Fixed point update
-        Jtot, Ka, Kb = get_JK_uhf(len(g.shape) == 3, g, Ds)
-        return H + Jtot - Ka, H + Jtot - Kb
-    elif opt == 'DIIS':
         c = diis_solver_uhf(r_prev_lists[0], r_prev_lists[1])
         Fa = 0 * H
         for i, element in enumerate(F_prev_lists[0]):

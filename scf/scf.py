@@ -205,11 +205,11 @@ def uhf(ao_int, scf_params, e_nuc):
     else:
         raise Exception("Keyword guess must be core, huckel or rhf.")
 
-    eps, C = diag(H, A)
+    eps, C = diag(F, A)
     D = get_dm(C, nel)
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
-    F, Fb = get_fock_uhf(H, g, [D, Db], 'FP', [], [])
+    F, Fb = get_fock_uhf(H, g, [D, Db])
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -230,7 +230,7 @@ def uhf(ao_int, scf_params, e_nuc):
         Db = get_dm(Cb, nelb)
 
         # get F
-        F, Fb = get_fock_uhf(H, g, [D, Db], 'FP', [], [])
+        F, Fb = get_fock_uhf(H, g, [D, Db])
 
         # calculate error
         err, err_v = get_SCF_err(S, D, F)
@@ -244,8 +244,8 @@ def uhf(ao_int, scf_params, e_nuc):
         rb_prev_list.append(errb_v)
 
         # diis update
-        if opt.upper() is not 'NONE':
-            F, Fb = get_fock_uhf(H, g, [D, Db], 'DIIS', \
+        if opt.upper() == "DIIS":
+            F, Fb = diis_update_uhf(H, g, [D, Db], \
                 [F_prev_list, Fb_prev_list], \
                 [r_prev_list, rb_prev_list])
 
