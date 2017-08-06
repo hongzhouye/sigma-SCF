@@ -223,6 +223,11 @@ def uhf(ao_int, scf_params, e_nuc):
     # SCF loop
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
+        # oda collect old Fock/DM/Energy
+        if opt.upper() == "ODA":
+            Dold, Fold, Dbold, Fbold = D, F, Db, Fb
+            Eold = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+
         # diag and update density matrix
         eps, C = diag(F, A)
         D = get_dm(C, nel)
@@ -231,6 +236,16 @@ def uhf(ao_int, scf_params, e_nuc):
 
         # get F
         F, Fb = get_fock_uhf(H, g, [D, Db])
+
+        # oda: collect new Fock/DM/Energy
+        if opt.upper() == "ODA":
+            E = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+            lbd = oda_update_uhf(\
+                [F - Fold, Fb - Fbold], [D - Dold, Db - Dbold], E - Eold)
+            D = lbd * D + (1. - lbd) * Dold
+            Db = lbd * Db + (1. - lbd) * Dbold
+            F = lbd * F + (1. - lbd) * Fold
+            Fb = lbd * Fb + (1. - lbd) * Fbold
 
         # calculate error
         err, err_v = get_SCF_err(S, D, F)
