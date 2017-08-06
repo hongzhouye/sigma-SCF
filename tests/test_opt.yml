@@ -1,21 +1,23 @@
 conv:
-     5
+     7
 opt:
      "DIIS"
 max_nbf:
      120
 guess:
-     "Core"
+     "Huckel"
 max_iter:
-     120
+     12
 charge:
     0
+is_fitted:
+    false
 
 basis:
     "aug-cc-pVDZ"
 
 geometry:
-|   
+|
     O
     H 1 1.1
     H 1 1.1 2 104
