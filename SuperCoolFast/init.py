@@ -36,6 +36,17 @@ def init(input_file):
         if key in scf_params.keys():
             scf_params[key] = user_input[key]
     ao_ints, e_ZZ_repul, n_el_tot, n_basis = p4w.init(scf_params)
+    if scf_params['ortho_ao'] == True:
+        if scf_params['is_fitted'] == False:
+            from scf import xform_2, xform_4
+            import numpy as np
+            ao_ints['T'] = xform_2(ao_ints['T'], ao_ints['A'])
+            ao_ints['V'] = xform_2(ao_ints['V'], ao_ints['A'])
+            ao_ints['g4'] = xform_4(ao_ints['g4'], ao_ints['A'])
+            ao_ints['S'] = ao_ints['A'] = np.eye(n_basis)
+        else:
+            raise Exception(\
+                "Keywords ORTHO_AO and IS_FITTED cannot be true simultaneously")
     n_el_tot -= scf_params['charge']    # total num of electrons
     n_el_diff = scf_params['spin'] - 1  # n_el_alpha - n_el_beta
     if (n_el_tot + n_el_diff) % 2 == 1:

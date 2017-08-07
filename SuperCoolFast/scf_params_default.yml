@@ -3,11 +3,13 @@ nel:
 nbas:
     ""
 conv:
-     5
+     6
 opt:
      "None"
 max_nbf:
      120
+ortho_ao:
+    False
 guess:
      "Core"
 max_iter:
@@ -19,6 +21,8 @@ spin:
 unrestricted:
     False
 homo_lumo_mix:
+    0
+omega:
     0
 
 is_fitted:
