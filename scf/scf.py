@@ -103,7 +103,7 @@ def rhf(ao_int, scf_params, e_nuc):
     eps, C = diag(F, A)
     D = get_dm(C, nel)
     F = get_fock(H, g, D)
-    energy = get_SCF_energy(ao_int, F, D, False)
+    e_scf = get_SCF_energy(ao_int, F, D, False)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -121,7 +121,7 @@ def rhf(ao_int, scf_params, e_nuc):
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
         if opt.upper() == "ODA":
-            Dold, Fold, Eold = D, F, energy
+            Dold, Fold, Eold = D, F, e_scf
 
         # diag and update density matrix
         eps, C = diag(F, A)
@@ -149,10 +149,11 @@ def rhf(ao_int, scf_params, e_nuc):
             F = diis_update(H, g, D, F_prev_list, r_prev_list)
 
         # get energy
-        energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
+        e_scf = get_SCF_energy(ao_int, F, D, False)
+        e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, energy, err))
+        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, err))
 
         # check convergence
         if err < conv:
@@ -217,6 +218,7 @@ def uhf(ao_int, scf_params, e_nuc):
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
     F, Fb = get_fock_uhf(H, g, [D, Db])
+    e_scf = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -236,8 +238,7 @@ def uhf(ao_int, scf_params, e_nuc):
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
         if opt.upper() == "ODA":
-            Dold, Fold, Dbold, Fbold = D, F, Db, Fb
-            Eold = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+            Dold, Fold, Dbold, Fbold, Eold = D, F, Db, Fb, e_scf
 
         # diag and update density matrix
         eps, C = diag(F, A)
@@ -276,10 +277,11 @@ def uhf(ao_int, scf_params, e_nuc):
                 [r_prev_list, rb_prev_list])
 
         # get energy
-        energy = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
+        e_scf = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+        e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, energy, errtot))
+        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, errtot))
 
         # check convergence
         if errtot < conv:
