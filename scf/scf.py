@@ -162,7 +162,8 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        logger_concise.info("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, err))
+        logger_concise.info(\
+            "\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, err))
 
         # check convergence
         if err < conv:
@@ -172,11 +173,12 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     logger_concise.info("\t\t---------------------------------\n")
     # check convergence
     if conv_flag:
-        logger_verbose.info("\n\t** RHF converges in %d iterations! **" % iteration)
+        logger_verbose.info(\
+            "\n\t** RHF converges in %d iterations! **" % iteration)
         return eps, C, D, F
     else:
-        raise Exception("\t** RHF fails to converge in %d iterations! **" \
-            % max_iter)
+        raise Exception(\
+            "\t** RHF fails to converge in %d iterations! **" % max_iter)
 
 
 def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
@@ -301,7 +303,8 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        logger_concise.info("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, errtot))
+        logger_concise.info(\
+            "\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, errtot))
 
         # check convergence
         if errtot < conv:
@@ -311,8 +314,9 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     logger_concise.info("\t\t---------------------------------\n")
     # check convergence
     if conv_flag:
-        logger_verbose.info("\n\t** UHF converges in %d iterations! **" % iteration)
+        logger_verbose.info(\
+            "\n\t** UHF converges in %d iterations! **" % iteration)
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
-        raise Exception("\t** UHF fails to converge in %d iterations! **"
-                         % max_iter)
+        raise Exception(\
+            "\t** UHF fails to converge in %d iterations! **" % max_iter)
