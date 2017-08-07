@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 
-def test_diis():
+def test_opt():
     """
     We pick the physicist's water molecule in a relatively large
     basis set (aug-cc-pVDZ), whose uhf and rhf solutions are the
