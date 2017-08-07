@@ -154,7 +154,7 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
         # diis update
         if opt.upper() == "DIIS":
-            F = diis_update(H, g, D, F_prev_list, r_prev_list) \
+            F = diis_update(F_prev_list, r_prev_list) \
                 if len(F_prev_list) > 1 else get_fock(H, g, D)
 
         # get energy
@@ -291,7 +291,7 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
         # diis update
         if opt.upper() == "DIIS":
-            F, Fb = diis_update_uhf(H, g, [D, Db], \
+            F, Fb = diis_update_uhf(\
                 [F_prev_list, Fb_prev_list], \
                 [r_prev_list, rb_prev_list]) \
                 if len(F_prev_list) > 1 else get_fock_uhf(H, g, [D, Db])

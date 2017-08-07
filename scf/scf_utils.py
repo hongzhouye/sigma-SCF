@@ -68,13 +68,9 @@ def get_fock(H, g, D):
     return H + 2 * J - K
 
 
-def diis_update(H, g, D, F_prev_list, r_prev_list):
-    """
-    DIIS update given previous Fock matrices and error vectors.
-    Note that if there are less than two F's, return normal F.
-    """
+def diis_update(F_prev_list, r_prev_list):
     c = diis_solver(r_prev_list) # GET THE COEFFICIENTS!!
-    out = 0 * H
+    out = 0 * F_prev_list[0]
     for i, element in enumerate(F_prev_list):
         out += c[i] * element
     return out
@@ -101,12 +97,12 @@ def get_fock_uhf(H, g, Ds):
     return H + Jtot - Ka, H + Jtot - Kb
 
 
-def diis_update_uhf(H, g, Ds, F_prev_lists, r_prev_lists):
+def diis_update_uhf(F_prev_lists, r_prev_lists):
     c = diis_solver_uhf(r_prev_lists[0], r_prev_lists[1])
-    Fa = 0 * H
+    Fa = 0 * F_prev_lists[0][0]
     for i, element in enumerate(F_prev_lists[0]):
         Fa += c[i] * element
-    Fb = 0 * H
+    Fb = 0 * F_prev_lists[0][0]
     for i, element in enumerate(F_prev_lists[1]):
         Fb += c[i] * element
     return Fa, Fb
