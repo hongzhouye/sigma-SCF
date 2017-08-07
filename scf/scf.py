@@ -4,6 +4,7 @@ Performs a Hartree-Fock calculation on a given molecule.
 """
 import numpy as np
 import os, sys
+import logging
 sys.path.append(os.path.dirname(__file__))
 from scf_utils import *
 sys.path.pop()
@@ -65,6 +66,7 @@ def rhf(ao_int, scf_params, e_nuc):
     """
     Spin-restricted Hartree-Fock
     """
+    logging.info("\t** Module: Spin-restricted Hartree-Fock **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nbas = scf_params['nbas']
@@ -87,6 +89,7 @@ def rhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
+    logging.info("\t** SCF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         F = H
     elif guess.upper() == "HUCKEL":
@@ -109,6 +112,10 @@ def rhf(ao_int, scf_params, e_nuc):
     r_prev_list = deque([], max_prev_count)
 
     # SCF loop
+    logging.info("\t** Starting RHF SCF loop **")
+    print("\t\t---------------------------------")
+    print("\t\titer   total energy   ||[D, F]||")
+    print("\t\t---------------------------------")
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
@@ -144,24 +151,21 @@ def rhf(ao_int, scf_params, e_nuc):
         energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
 
         # print iteratoin info
-        print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
-            iteration, energy, err))
+        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, energy, err))
 
         # check convergence
         if err < conv:
             conv_flag = True
-            print ("  ** R-SCF converges in %d iterations! **" % iteration)
-            #eps, C = diag(F, A)
-            #D = get_dm(C, nel)
             break
 
-
+    print("\t\t---------------------------------\n")
     # post process
     if conv_flag:
+        logging.info("\t** R-SCF converges in %d iterations! **" % iteration)
         return eps, C, D, F
     else:
-        raise Exception ("  ** R-SCF fails to converge in %d iterations! **"
-                         % max_iter)
+        logging.error("\t** R-SCF fails to converge in %d iterations! **" \
+            % max_iter)
 
 
 def uhf(ao_int, scf_params, e_nuc):
