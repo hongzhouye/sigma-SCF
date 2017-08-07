@@ -73,14 +73,11 @@ def diis_update(H, g, D, F_prev_list, r_prev_list):
     DIIS update given previous Fock matrices and error vectors.
     Note that if there are less than two F's, return normal F.
     """
-    if(len(F_prev_list) <= 1):
-        return get_fock(H, g, D)
-    else:
-        c = diis_solver(r_prev_list) # GET THE COEFFICIENTS!!
-        out = 0 * H
-        for i, element in enumerate(F_prev_list):
-            out += c[i] * element
-        return out
+    c = diis_solver(r_prev_list) # GET THE COEFFICIENTS!!
+    out = 0 * H
+    for i, element in enumerate(F_prev_list):
+        out += c[i] * element
+    return out
 
 
 def oda_update(dF, dD, dE):
@@ -105,17 +102,14 @@ def get_fock_uhf(H, g, Ds):
 
 
 def diis_update_uhf(H, g, Ds, F_prev_lists, r_prev_lists):
-    if(len(F_prev_lists[0]) <= 1):
-        return get_fock_uhf(H, g, Ds)
-    else:
-        c = diis_solver_uhf(r_prev_lists[0], r_prev_lists[1])
-        Fa = 0 * H
-        for i, element in enumerate(F_prev_lists[0]):
-            Fa += c[i] * element
-        Fb = 0 * H
-        for i, element in enumerate(F_prev_lists[1]):
-            Fb += c[i] * element
-        return Fa, Fb
+    c = diis_solver_uhf(r_prev_lists[0], r_prev_lists[1])
+    Fa = 0 * H
+    for i, element in enumerate(F_prev_lists[0]):
+        Fa += c[i] * element
+    Fb = 0 * H
+    for i, element in enumerate(F_prev_lists[1]):
+        Fb += c[i] * element
+    return Fa, Fb
 
 
 def oda_update_uhf(dFs, dDs, dE):
