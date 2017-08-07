@@ -13,7 +13,7 @@ from collections import deque
 np.set_printoptions(suppress=True, precision=3)
 
 
-def scf(ao_int, scf_params, e_nuc):
+def scf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Solve the SCF problem given AO integrals (ao_int [dict]):
         - T: ao_kinetic
@@ -57,16 +57,24 @@ def scf(ao_int, scf_params, e_nuc):
     """
     # rhf or uhf
     if scf_params['unrestricted'] == True:
-        return uhf(ao_int, scf_params, e_nuc)
+        return uhf(ao_int, scf_params, e_nuc, logger_level)
     else:
-        return rhf(ao_int, scf_params, e_nuc)
+        return rhf(ao_int, scf_params, e_nuc, logger_level)
 
 
-def rhf(ao_int, scf_params, e_nuc):
+def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Spin-restricted Hartree-Fock
     """
-    logging.info("\t** Module: Spin-restricted Hartree-Fock **")
+    # setup logger
+    if logger_level.upper() == "NORMAL":
+        logger_verbose = logging.getLogger("normal")
+        logger_concise = logging.getLogger("print")
+    elif logger_level.upper() == "MUTE":
+        logger_verbose = logging.getLogger("mute")
+        logger_concise = logging.getLogger("mute")
+
+    logger_verbose.info("\n\t** Module: Spin-restricted Hartree-Fock **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nbas = scf_params['nbas']
@@ -89,7 +97,7 @@ def rhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
-    logging.info("\t** RHF initial guess: %s" % guess.upper())
+    logger_verbose.info("\n\t** RHF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         F = H
     elif guess.upper() == "HUCKEL":
@@ -113,10 +121,10 @@ def rhf(ao_int, scf_params, e_nuc):
     r_prev_list = deque([], max_prev_count)
 
     # SCF loop
-    logging.info("\t** Starting RHF SCF loop **")
-    print("\t\t---------------------------------")
-    print("\t\titer   total energy   ||[D, F]||")
-    print("\t\t---------------------------------")
+    logger_verbose.info("\n\t** Starting RHF SCF loop **")
+    logger_concise.info("\t\t---------------------------------")
+    logger_concise.info("\t\titer   total energy   ||[D, F]||")
+    logger_concise.info("\t\t---------------------------------")
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
@@ -153,28 +161,38 @@ def rhf(ao_int, scf_params, e_nuc):
         e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, err))
+        logger_concise.info("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, err))
 
         # check convergence
         if err < conv:
             conv_flag = True
             break
 
-    print("\t\t---------------------------------\n")
+    logger_concise.info("\t\t---------------------------------\n")
     # check convergence
     if conv_flag:
-        logging.info("\t** RHF converges in %d iterations! **" % iteration)
+        logger_verbose.info("\n\t** RHF converges in %d iterations! **" % iteration)
         return eps, C, D, F
     else:
         raise Exception("\t** RHF fails to converge in %d iterations! **" \
             % max_iter)
 
 
-def uhf(ao_int, scf_params, e_nuc):
+def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Spin-unrestricted Hartree-Fock
     """
-    logging.info("\t** Module: Spin-unrestricted Hartree-Fock **")
+    # setup logger
+    if logger_level.upper() == "NORMAL":
+        logger_verbose = logging.getLogger("normal")
+        logger_concise = logging.getLogger("print")
+    elif logger_level.upper() == "MUTE":
+        logger_verbose = logging.getLogger("mute")
+        logger_concise = logging.getLogger("mute")
+    else:
+        raise Exception("Arg4 in scf must be 'normal' or 'mute'.")
+
+    logger_verbose.info("\n\t** Module: Spin-unrestricted Hartree-Fock **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nelb = scf_params['nel_beta']
@@ -200,7 +218,7 @@ def uhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
-    logging.info("\t** UHF initial guess: %s" % guess.upper())
+    logger_verbose.info("\n\t** UHF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         F = H
     elif guess.upper() == "HUCKEL":
@@ -230,10 +248,10 @@ def uhf(ao_int, scf_params, e_nuc):
     rb_prev_list = deque([], max_prev_count)
 
     # SCF loop
-    logging.info("\t** Starting UHF SCF loop **")
-    print("\t\t---------------------------------")
-    print("\t\titer   total energy   ||[D, F]||")
-    print("\t\t---------------------------------")
+    logger_verbose.info("\n\t** Starting UHF SCF loop **")
+    logger_concise.info("\t\t---------------------------------")
+    logger_concise.info("\t\titer   total energy   ||[D, F]||")
+    logger_concise.info("\t\t---------------------------------")
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
@@ -281,17 +299,17 @@ def uhf(ao_int, scf_params, e_nuc):
         e_tot = e_scf + e_nuc
 
         # print iteratoin info
-        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, errtot))
+        logger_concise.info("\t\t%4d   % 12.8F   %7.4E" % (iteration, e_tot, errtot))
 
         # check convergence
         if errtot < conv:
             conv_flag = True
             break
 
-    print("\t\t---------------------------------\n")
+    logger_concise.info("\t\t---------------------------------\n")
     # check convergence
     if conv_flag:
-        logging.info("\t** UHF converges in %d iterations! **" % iteration)
+        logger_verbose.info("\n\t** UHF converges in %d iterations! **" % iteration)
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
         raise Exception("\t** UHF fails to converge in %d iterations! **"

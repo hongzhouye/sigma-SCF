@@ -6,7 +6,7 @@ Initializations for scf calculations:
 import yaml
 import psi4wrapper as p4w
 import os
-import logging
+import logging, logging.config
 
 '''
 scf_params = None
@@ -29,11 +29,8 @@ def init(input_file):
     """
     setup the parameters for thre job
     """
-    logging.basicConfig(\
-        #filename='example.log', filemode="w", \
-        level=logging.INFO, \
-        format="%(asctime)s %(levelname)s %(funcName)s\n%(message)s\n", \
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.config.fileConfig(os.path.dirname(__file__) + '/logging.config')
+    logger = logging.getLogger("normal")
 
     # get input parameters
     defaults_location = os.path.dirname(__file__) + "/scf_params_default.yml"
@@ -68,7 +65,7 @@ def init(input_file):
         scf_params['unrestricted'] = True
     scf_params['nbas'] = n_basis
     # print parameters to screen
-    logging.info("\t** User Input **\n %s", scf_params)
+    logger.info("\t** User Input **\n %s", scf_params)
     # return
     return ao_ints, scf_params, e_ZZ_repul
 
