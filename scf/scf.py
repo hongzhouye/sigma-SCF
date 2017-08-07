@@ -103,6 +103,7 @@ def rhf(ao_int, scf_params, e_nuc):
     eps, C = diag(F, A)
     D = get_dm(C, nel)
     F = get_fock(H, g, D)
+    energy = get_SCF_energy(ao_int, F, D, False)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -120,7 +121,7 @@ def rhf(ao_int, scf_params, e_nuc):
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
         if opt.upper() == "ODA":
-            Dold, Fold, Eold = D, F, get_SCF_energy(ao_int, F, D, False)
+            Dold, Fold, Eold = D, F, energy
 
         # diag and update density matrix
         eps, C = diag(F, A)
