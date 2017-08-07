@@ -149,13 +149,13 @@ def rsscf(ao_int, scf_params, e_nuc):
         err, err_v = get_SCF_err(S, D, Feff)
 
         # update F_prev_list and r_prev_list
-        #Feff_prev_list.append(Feff)
-        #r_prev_list.append(err_v)
+        Feff_prev_list.append(Feff)
+        r_prev_list.append(err_v)
 
         # diis update
         if opt.upper() == "DIIS":
-            raise Exception("Currently we don't support diis for sigma-SCF.")
-            #Feff = diis_update(H, g, D, Feff_prev_list, r_prev_list)
+            Feff = diis_update(Feff_prev_list, r_prev_list) \
+                if len(Feff_prev_list) > 1 else get_fock_eff(H, g, D)
 
         # get energy
         F = get_fock(H, g, D)
