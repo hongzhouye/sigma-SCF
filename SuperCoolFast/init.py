@@ -6,6 +6,7 @@ Initializations for scf calculations:
 import yaml
 import psi4wrapper as p4w
 import os
+import logging
 
 '''
 scf_params = None
@@ -28,14 +29,22 @@ def init(input_file):
     """
     setup the parameters for thre job
     """
+    logging.basicConfig(\
+        #filename='example.log', filemode="w", \
+        level=logging.INFO, \
+        format="%(asctime)s %(levelname)s %(funcName)s\n%(message)s\n", \
+        datefmt='%m/%d/%Y %I:%M:%S %p')
 
+    # get input parameters
     defaults_location = os.path.dirname(__file__) + "/scf_params_default.yml"
     scf_params = parse_yaml(defaults_location)
     user_input = parse_yaml(input_file)
     for key in user_input.keys():
         if key in scf_params.keys():
             scf_params[key] = user_input[key]
+    # gets integrals from psi4
     ao_ints, e_ZZ_repul, n_el_tot, n_basis = p4w.init(scf_params)
+    # orthogonalize AO integrals if needed
     if scf_params['ortho_ao'] == True:
         if scf_params['is_fitted'] == False:
             from scf import xform_2, xform_4
@@ -47,6 +56,7 @@ def init(input_file):
         else:
             raise Exception(\
                 "Keywords ORTHO_AO and IS_FITTED cannot be true simultaneously")
+    # get nel_alpha/beta from spin and charge
     n_el_tot -= scf_params['charge']    # total num of electrons
     n_el_diff = scf_params['spin'] - 1  # n_el_alpha - n_el_beta
     if (n_el_tot + n_el_diff) % 2 == 1:
@@ -57,7 +67,9 @@ def init(input_file):
     if scf_params['spin'] is not 1:     # if not singlet
         scf_params['unrestricted'] = True
     scf_params['nbas'] = n_basis
-    print(scf_params)
+    # print parameters to screen
+    logging.info("\t** User Input **\n %s", scf_params)
+    # return
     return ao_ints, scf_params, e_ZZ_repul
 
 
