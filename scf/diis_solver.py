@@ -53,15 +53,3 @@ def diis_solver_uhf(errs, errbs):
     c = x[:n]
 
     return c
-
-
-if __name__ == "__main__":
-    n = 10
-    m = 4
-    from collections import deque
-    errs = deque([], maxlen=m)
-    for i in range(m):
-        errs.append(np.random.rand(n, n))
-
-    c = diis_solver(errs)
-    print(c)
