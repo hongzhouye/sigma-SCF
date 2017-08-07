@@ -4,6 +4,7 @@ Performs a sigma-SCF calculation on a given molecule.
 """
 import numpy as np
 import os, sys
+import logging
 sys.path.append(os.path.dirname(__file__))
 from scf_utils import *
 from sscf_utils import *
@@ -14,7 +15,7 @@ from collections import deque
 np.set_printoptions(suppress=True, precision=3)
 
 
-def sscf(ao_int, scf_params, e_nuc):
+def sscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Solve the sigma-SCF problem given AO integrals (ao_int [dict]):
         - T: ao_kinetic
@@ -61,15 +62,24 @@ def sscf(ao_int, scf_params, e_nuc):
     """
     # rhf or uhf
     if scf_params['unrestricted'] == True:
-        return usscf(ao_int, scf_params, e_nuc)
+        return usscf(ao_int, scf_params, e_nuc, logger_level)
     else:
-        return rsscf(ao_int, scf_params, e_nuc)
+        return rsscf(ao_int, scf_params, e_nuc, logger_level)
 
 
-def rsscf(ao_int, scf_params, e_nuc):
+def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Spin-restricted Hartree-Fock
     """
+    # setup logger
+    if logger_level.upper() == "NORMAL":
+        logger_verbose = logging.getLogger("normal")
+        logger_concise = logging.getLogger("print")
+    elif logger_level.upper() == "MUTE":
+        logger_verbose = logging.getLogger("mute")
+        logger_concise = logging.getLogger("mute")
+
+    logger_verbose.info("\n\t** Module: Spin-restricted sigma-SCF **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nbas = scf_params['nbas']
@@ -95,6 +105,7 @@ def rsscf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
+    logger_verbose.info("\n\t** RSSCF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         scf_params['guess'] = 'huckel'
         eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
@@ -115,6 +126,7 @@ def rsscf(ao_int, scf_params, e_nuc):
     eps, C = diag(Feff, A)
     D = get_dm(C, nel)
     Feff = get_fock_eff(H, g, D)
+    var = get_SSCF_variance(H, g, D)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -124,12 +136,15 @@ def rsscf(ao_int, scf_params, e_nuc):
     r_prev_list = deque([], max_prev_count)
 
     # SCF loop
+    logger_verbose.info("\n\t** Starting RSSCF SCF loop **")
+    logger_concise.info("\t" * 2 + "-" * 48)
+    logger_concise.info("\t\titer   total energy     variance     ||[D, F]||")
+    logger_concise.info("\t" * 2 + "-" * 48)
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
         if opt.upper() == "ODA":
-            Dold, Feffold, Wold = \
-                D, Feff, get_SSCF_variance(H, g, D)
+            Dold, Feffold, Wold = D, Feff, var
 
         # diag and update density matrix
         eps, C = diag(Feff, A)
@@ -159,29 +174,27 @@ def rsscf(ao_int, scf_params, e_nuc):
 
         # get energy
         F = get_fock(H, g, D)
-        energy = get_SCF_energy(ao_int, F, D, False) + e_nuc
-        variance = get_SSCF_variance(H, g, D)
+        e_tot = get_SCF_energy(ao_int, F, D, False) + e_nuc
+        var = get_SSCF_variance(H, g, D)
 
         # print iteratoin info
-        print(\
-            "iter: {0:2d}, etot: {1:0.8F}, vtot: {2:0.8F}, err: {3:0.5E}"\
-            .format(iteration, energy, variance, err))
+        logger_concise.info(\
+            "\t\t%4d   % 12.8F  %12.8F   %7.4E" % (iteration, e_tot, var, err))
 
         # check convergence
         if err < conv:
             conv_flag = True
-            print ("  ** R-SCF converges in %d iterations! **" % iteration)
-            #eps, C = diag(F, A)
-            #D = get_dm(C, nel)
             break
 
-
+    logger_concise.info("\t" * 2 + "-" * 48 + "\n")
     # post process
     if conv_flag:
+        logger_verbose.info(\
+            "\n\t** RSSCF converges in %d iterations! **" % iteration)
         return eps, C, D, get_fock(H, g, D)
     else:
-        raise Exception ("  ** R-SCF fails to converge in %d iterations! **"
-                         % max_iter)
+        raise Exception(\
+            "\t** RSSCF fails to converge in %d iterations! **" % max_iter)
 
 
 def usscf(ao_int, scf_params, e_nuc):
