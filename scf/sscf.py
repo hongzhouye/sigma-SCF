@@ -126,7 +126,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     eps, C = diag(Feff, A)
     D = get_dm(C, nel)
     Feff = get_fock_eff(H, g, D)
-    var = get_SSCF_variance(H, g, D)
+    var = get_SSCF_variance(H, g, D, False)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -155,7 +155,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            W = get_SSCF_variance(H, g, D)
+            W = get_SSCF_variance(H, g, D, False)
             lbd = oda_update(Feff - Feffold, D - Dold, W - Wold)
             D = lbd * D + (1. - lbd) * Dold
             Feff = lbd * Feff + (1. - lbd) * Feffold
@@ -175,7 +175,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         # get energy
         F = get_fock(H, g, D)
         e_tot = get_SCF_energy(ao_int, F, D, False) + e_nuc
-        var = get_SSCF_variance(H, g, D)
+        var = get_SSCF_variance(H, g, D, False)
 
         # print iteratoin info
         logger_concise.info(\

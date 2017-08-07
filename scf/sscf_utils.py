@@ -32,36 +32,33 @@ def get_fock_eff(H, g, D):
     return Feff
 
 
-def get_SSCF_variance(H, g, D):
-    F = get_fock(H, g, D)
-    nbas = D.shape[0]
-    Q = np.eye(nbas) - D
-    var1 = 2. * np.trace(F @ D @ F @ Q)
-    var2 = - np.einsum("pqrs, ijkl, pi, ql, rk, sj ->", \
-        g, g, D, Q, D, Q, optimize=True) + \
-        2. * np.einsum("pqrs, ijkl, pi, qj, rk, sl ->", \
-        g, g, D, Q, D, Q, optimize=True)
-
-    return var1 + var2
-
-
-def get_SSCF_variance_uhf(H, g, D):
-    F = get_fock(H, g, D)
-    Fs = [F, F]
-    Ds = [D, D]
-    nbas = D.shape[0]
-    Qs = [np.eye(nbas) - D for D in Ds]
-    var1 = var2 = 0.
-    for i in range(len(Fs)):
-        var1 += np.trace(Fs[i] @ Ds[i] @ Fs[i] @ Qs[i])
-        var2 -= np.einsum(\
-            "pqrs, ijkl, pi, ql, rk, sj ->", \
-            g, g, Ds[i], Qs[i], Ds[i], Qs[i], optimize=True)
-        for j in range(len(Fs)):
-            var2 += np.einsum(\
-                "pqrs, ijkl, pi, qj, rk, sl -> ", \
-                g, g, Ds[i], Qs[i], Ds[j], Qs[j], optimize=True)
-
-    var2 *= 0.5
+def get_SSCF_variance(H, g, D, unrestricted):
+    if unrestricted == True:
+        if type(D) is not list:
+            raise Exception("For USSCF, Arg4 (D) must be list.")
+        Fs = list(get_fock_uhf(H, g, D))
+        Ds = D
+        nbas = D[0].shape[0]
+        Qs = [np.eye(nbas) - D for D in Ds]
+        var1 = var2 = 0.
+        for i in range(len(Fs)):
+            var1 += np.trace(Fs[i] @ Ds[i] @ Fs[i] @ Qs[i])
+            var2 -= np.einsum(\
+                "pqrs, ijkl, pi, ql, rk, sj ->", \
+                g, g, Ds[i], Qs[i], Ds[i], Qs[i], optimize=True)
+            for j in range(len(Fs)):
+                var2 += np.einsum(\
+                    "pqrs, ijkl, pi, qj, rk, sl -> ", \
+                    g, g, Ds[i], Qs[i], Ds[j], Qs[j], optimize=True)
+        var2 *= 0.5
+    else:
+        F = get_fock(H, g, D)
+        nbas = D.shape[0]
+        Q = np.eye(nbas) - D
+        var1 = 2. * np.trace(F @ D @ F @ Q)
+        var2 = - np.einsum("pqrs, ijkl, pi, ql, rk, sj ->", \
+            g, g, D, Q, D, Q, optimize=True) + \
+            2. * np.einsum("pqrs, ijkl, pi, qj, rk, sl ->", \
+            g, g, D, Q, D, Q, optimize=True)
 
     return var1 + var2
