@@ -1,0 +1,24 @@
+conv:
+     7
+opt:
+     "DIIS"
+max_nbf:
+     120
+guess:
+     "core"
+max_iter:
+    300
+charge:
+    0
+spin:
+    1
+ortho_ao:
+    True
+is_fitted:
+    False
+basis:
+    "cc-pVDZ"
+geometry:
+|
+    H
+    H 1 1.8
