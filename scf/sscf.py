@@ -125,7 +125,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
     eps, C = diag(Feff, A)
     D = get_dm(C, nel)
-    Feff = get_fock_eff(H, g, D)
+    Feff = get_fock_eff(H, g, D, False)
     var = get_SSCF_variance(H, g, D, False)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
@@ -151,7 +151,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         D = get_dm(C, nel)
 
         # get F
-        Feff = get_fock_eff(H, g, D)
+        Feff = get_fock_eff(H, g, D, False)
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
@@ -170,7 +170,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         # diis update
         if opt.upper() == "DIIS":
             Feff = diis_update(Feff_prev_list, r_prev_list) \
-                if len(Feff_prev_list) > 1 else get_fock_eff(H, g, D)
+                if len(Feff_prev_list) > 1 else get_fock_eff(H, g, D, False)
 
         # get energy
         F = get_fock(H, g, D)
@@ -197,10 +197,19 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
             "\t** RSSCF fails to converge in %d iterations! **" % max_iter)
 
 
-def usscf(ao_int, scf_params, e_nuc):
+def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     Spin-unrestricted Hartree-Fock
     """
+    # setup logger
+    if logger_level.upper() == "NORMAL":
+        logger_verbose = logging.getLogger("normal")
+        logger_concise = logging.getLogger("print")
+    elif logger_level.upper() == "MUTE":
+        logger_verbose = logging.getLogger("mute")
+        logger_concise = logging.getLogger("mute")
+
+    logger_verbose.info("\n\t** Module: Spin-unrestricted sigma-SCF **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nelb = scf_params['nel_beta']
@@ -216,6 +225,8 @@ def usscf(ao_int, scf_params, e_nuc):
     mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
 
     # unpack ao_int
+    if scf_params['ortho_ao'] == False:
+        raise Exception("ORTHO_AO must be set True for sigma-SCF!")
     T = ao_int['T']
     V = ao_int['V']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
@@ -226,98 +237,108 @@ def usscf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
+    logger_verbose.info("\n\t** USSCF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
-        F = H
-    elif guess.upper() == "HUCKEL":
-        dH = np.diag(H)
-        F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
-    elif guess.upper() == "RHF":
         scf_params['guess'] = 'huckel'
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc)
-        scf_params['guess'] = 'rhf'
+        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
+        scf_params['guess'] = 'core'
+        Q = np.eye(nbas) - D
+        Feff = F @ (Q - D) @ F
+    elif guess.upper() == "HUCKEL":
+        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
+        Q = np.eye(nbas) - D
+        Heff = F @ (Q - D) @ F
+        dH = np.diag(Heff)
+        Feff = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
     else:
-        raise Exception("Keyword guess must be core, huckel or rhf.")
+        raise Exception("Keyword guess must be core, huckel.")
 
-    eps, C = diag(F, A)
+    eps, C = diag(Feff, A)
     D = get_dm(C, nel)
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
-    F, Fb = get_fock_uhf(H, g, [D, Db])
+    Feff, Fbeff = get_fock_eff(H, g, [D, Db], True)
+    var = get_SSCF_variance(H, g, [D, Db], True)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
     if(opt.upper() == 'DIIS'):
         max_prev_count = 10
-    F_prev_list = deque([], max_prev_count)
+    Feff_prev_list = deque([], max_prev_count)
     r_prev_list = deque([], max_prev_count)
-    Fb_prev_list = deque([], max_prev_count)
+    Fbeff_prev_list = deque([], max_prev_count)
     rb_prev_list = deque([], max_prev_count)
 
     # SCF loop
+    logger_verbose.info("\n\t** Starting USSCF SCF loop **")
+    logger_concise.info("\t" * 2 + "-" * 48)
+    logger_concise.info("\t\titer   total energy     variance     ||[D, F]||")
+    logger_concise.info("\t" * 2 + "-" * 48)
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
         if opt.upper() == "ODA":
-            Dold, Fold, Dbold, Fbold = D, F, Db, Fb
-            Eold = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+            Dold, Feffold, Dbold, Fbeffold, Wold = D, Feff, Db, Fbeff, var
 
         # diag and update density matrix
-        eps, C = diag(F, A)
+        eps, C = diag(Feff, A)
         D = get_dm(C, nel)
-        epsb, Cb = diag(Fb, A)
+        epsb, Cb = diag(Fbeff, A)
         Db = get_dm(Cb, nelb)
 
         # get F
-        F, Fb = get_fock_uhf(H, g, [D, Db])
+        Feff, Fbeff = get_fock_eff(H, g, [D, Db], True)
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            E = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+            W = get_SSCF_variance(H, g, [D, Db], True)
             lbd = oda_update_uhf(\
-                [F - Fold, Fb - Fbold], [D - Dold, Db - Dbold], E - Eold)
+                [Feff - Feffold, Fbeff - Fbeffold], \
+                [D - Dold, Db - Dbold], W - Wold)
             D = lbd * D + (1. - lbd) * Dold
             Db = lbd * Db + (1. - lbd) * Dbold
-            F = lbd * F + (1. - lbd) * Fold
-            Fb = lbd * Fb + (1. - lbd) * Fbold
+            Feff = lbd * Feff + (1. - lbd) * Feffold
+            Fbeff = lbd * Fbeff + (1. - lbd) * Fbeffold
 
         # calculate error
-        err, err_v = get_SCF_err(S, D, F)
-        errb, errb_v = get_SCF_err(S, Db, Fb)
+        err, err_v = get_SCF_err(S, D, Feff)
+        errb, errb_v = get_SCF_err(S, Db, Fbeff)
         errtot = (err + errb) * 0.5
 
         # update F_prev_list and r_prev_list
-        F_prev_list.append(F)
+        Feff_prev_list.append(Feff)
         r_prev_list.append(err_v)
-        Fb_prev_list.append(Fb)
+        Fbeff_prev_list.append(Fbeff)
         rb_prev_list.append(errb_v)
 
         # diis update
         if opt.upper() == "DIIS":
-            F, Fb = diis_update_uhf(H, g, [D, Db], \
-                [F_prev_list, Fb_prev_list], \
-                [r_prev_list, rb_prev_list])
+            Feff, Fbeff = diis_update_uhf(\
+                [Feff_prev_list, Fbeff_prev_list], \
+                [r_prev_list, rb_prev_list]) \
+                if len(Feff_prev_list) > 1 \
+                else get_fock_eff(H, g, [D, Db], True)
 
         # get energy
-        energy = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
+        F, Fb = get_fock_uhf(H, g, [D, Db])
+        e_tot = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
+        var = get_SSCF_variance(H, g, [D, Db], True)
 
         # print iteratoin info
-        print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
-            iteration, energy, errtot))
+        logger_concise.info(\
+            "\t\t%4d   % 12.8F  %12.8F   %7.4E" % (iteration, e_tot, var, err))
 
         # check convergence
         if errtot < conv:
             conv_flag = True
-            print ("  ** U-SCF converges in %d iterations! **" % iteration)
-            eps, C = diag(F, A)
-            D = get_dm(C, nel)
-            epsb, Cb = diag(Fb, A)
-            Db = get_dm(Cb, nelb)
             break
 
-
+    logger_concise.info("\t" * 2 + "-" * 48 + "\n")
     # post process
     if conv_flag:
+        logger_verbose.info(\
+            "\n\t** USSCF converges in %d iterations! **" % iteration)
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
-        raise Exception ("  ** U-SCF fails to converge in %d iterations! **"
-                         % max_iter)
+        raise Exception(\
+            "\t** U-SCF fails to converge in %d iterations! **" % max_iter)

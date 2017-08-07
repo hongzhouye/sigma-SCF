@@ -2,34 +2,63 @@ import numpy as np
 import os, sys
 sys.path.append(os.path.dirname(__file__))
 from diis_solver import diis_solver, diis_solver_uhf
-from scf_utils import get_fock
+from scf_utils import get_fock, get_fock_uhf
 sys.path.pop()
 import jk
 import xform
 
 
-def get_fock_eff(H, g, D):
-    nbas = H.shape[0]
-    F = get_fock(H, g, D)
-    Q = np.eye(nbas) - D
-    Feff = F @ (Q - D) @ F + \
-        2. * np.einsum("pqrs, qi, ij, jp -> rs", \
-            g, Q, F, D, optimize=True) - \
-        np.einsum("prqs, qi, ij, jp -> rs", \
-            g, Q, F, D, optimize=True) + \
-        2. * np.einsum("pqrs, qi, ij, jp -> rs", \
-            g, D, F, Q, optimize=True) - \
-        np.einsum("prqs, qi, ij, jp -> rs", \
-            g, D, F, Q, optimize=True) + \
-        2. * np.einsum("mqrs, njkl, qj, rk, sl -> mn", \
-            g, g, Q, D, Q, optimize=True) - \
-        2. * np.einsum("pmrs, inkl, pi, rk, sl -> mn", \
-            g, g, D, D, Q, optimize=True) - \
-        np.einsum("mqrs, njkl, ql, rk, sj -> mn", \
-            g, g, Q, D, Q, optimize=True) + \
-        np.einsum("pmrs, ijkn, pi, rk, sj -> mn", \
-            g, g, D, D, Q, optimize=True)
-    return Feff
+def get_fock_eff(H, g, D, unrestricted):
+    if unrestricted == True:
+        if type(D) is not list:
+            raise Exception("For USSCF, Arg4 (D) must be list.")
+        nbas = H.shape[0]
+        Ds = D
+        Fs = list(get_fock_uhf(H, g, Ds))
+        Qs = [np.eye(nbas) - D for D in Ds]
+        Feffs = [0 * H, 0 * H]
+        for i in [0, 1]:
+            Feffs[i] += Fs[i] @ (Qs[i] - Ds[i]) @ Fs[i] - \
+                np.einsum("prqs, qi, ij, jp -> rs", \
+                g, Qs[i], Fs[i], Ds[i], optimize=True) - \
+                np.einsum("prqs, qi, ij, jp -> rs", \
+                g, Ds[i], Fs[i], Qs[i], optimize=True) - \
+                np.einsum("mqrs, njkl, ql, rk, sj -> mn", \
+                g, g, Qs[i], Ds[i], Qs[i], optimize=True) + \
+                np.einsum("pmrs, ijkn, pi, rk, sj -> mn", \
+                g, g, Ds[i], Ds[i], Qs[i], optimize=True)
+            for j in [0, 1]:
+                Feffs[i] += np.einsum("pqrs, qi, ij, jp -> rs", \
+                    g, Qs[j], Fs[j], Ds[j], optimize=True) + \
+                    np.einsum("pqrs, qi, ij, jp -> rs", \
+                    g, Ds[j], Fs[j], Qs[j], optimize=True) + \
+                    np.einsum("mqrs, njkl, qj, rk, sl -> mn", \
+                    g, g, Qs[i], Ds[j], Qs[j], optimize=True) - \
+                    np.einsum("pmrs, inkl, pi, rk, sl -> mn", \
+                    g, g, Ds[i], Ds[j], Qs[j], optimize=True)
+        return tuple(Feffs)
+    else:
+        nbas = H.shape[0]
+        F = get_fock(H, g, D)
+        Q = np.eye(nbas) - D
+        Feff = F @ (Q - D) @ F + \
+            2. * np.einsum("pqrs, qi, ij, jp -> rs", \
+                g, Q, F, D, optimize=True) - \
+            np.einsum("prqs, qi, ij, jp -> rs", \
+                g, Q, F, D, optimize=True) + \
+            2. * np.einsum("pqrs, qi, ij, jp -> rs", \
+                g, D, F, Q, optimize=True) - \
+            np.einsum("prqs, qi, ij, jp -> rs", \
+                g, D, F, Q, optimize=True) + \
+            2. * np.einsum("mqrs, njkl, qj, rk, sl -> mn", \
+                g, g, Q, D, Q, optimize=True) - \
+            2. * np.einsum("pmrs, inkl, pi, rk, sl -> mn", \
+                g, g, D, D, Q, optimize=True) - \
+            np.einsum("mqrs, njkl, ql, rk, sj -> mn", \
+                g, g, Q, D, Q, optimize=True) + \
+            np.einsum("pmrs, ijkn, pi, rk, sj -> mn", \
+                g, g, D, D, Q, optimize=True)
+        return Feff
 
 
 def get_SSCF_variance(H, g, D, unrestricted):
