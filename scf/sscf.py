@@ -97,13 +97,16 @@ def rsscf(ao_int, scf_params, e_nuc):
     # initial guess (case insensitive)
     if guess.upper() == "CORE":
         scf_params['guess'] = 'huckel'
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc)
+        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
         scf_params['guess'] = 'core'
         Q = np.eye(nbas) - D
         Feff = F @ (Q - D) @ F
-    # elif guess.upper() == "HUCKEL":
-    #     dH = np.diag(H)
-    #     F = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
+    elif guess.upper() == "HUCKEL":
+        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
+        Q = np.eye(nbas) - D
+        Heff = F @ (Q - D) @ F
+        dH = np.diag(Heff)
+        Feff = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
     # elif guess.upper() == "RHF":
     #     F = H
     else:
