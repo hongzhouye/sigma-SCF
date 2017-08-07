@@ -135,11 +135,10 @@ def get_SCF_err(S, D, F):
     return err, err_v
 
 
-def get_SCF_energy(ao_ints, F, D, unrestricted):
+def get_SCF_energy(H, F, D, unrestricted):
     """
     Calculates the energy.
     """
-    H = ao_ints['T'] + ao_ints['V']
     if unrestricted == True:
         if type(F) is not list or type(D) is not list:
             raise Exception("For UHF, F and D must have type list.")

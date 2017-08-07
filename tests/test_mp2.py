@@ -11,8 +11,7 @@ def test_mp2():
     ao_ints, test_scf_param, e_ZZ_repulsion = scf.init(\
         os.path.dirname(__file__) + "/test_mp2.yml")
     eps, C, D, F = scf.scf(ao_ints, test_scf_param, e_ZZ_repulsion)
-    H = ao_ints['T'] + ao_ints['V']
-    energy = np.sum((F+H)*D) + e_ZZ_repulsion
+    energy = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repulsion
 
     # psi4 setup
     import psi4

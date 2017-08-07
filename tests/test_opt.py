@@ -26,23 +26,23 @@ def test_opt():
     # RHF, DIIS
     scf_params['max_iter'] = 30
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    E_rhf_diis = scf.get_SCF_energy(ao_ints, F, D, False) + e_ZZ_repul
+    E_rhf_diis = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repul
     # RHF, ODA
     scf_params['max_iter'] = 300
     scf_params['opt'] = "oda"
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    E_rhf_oda = scf.get_SCF_energy(ao_ints, F, D, False) + e_ZZ_repul
+    E_rhf_oda = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repul
     # UHF, DIIS
     scf_params['max_iter'] = 30
     scf_params['opt'] = "diis"
     scf_params['unrestricted'] = True
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    E_uhf_diis = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repul
+    E_uhf_diis = scf.get_SCF_energy(ao_ints['H'], F, D, True) + e_ZZ_repul
     # UHF, ODA
     scf_params['max_iter'] = 300
     scf_params['opt'] = "oda"
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    E_uhf_oda = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repul
+    E_uhf_oda = scf.get_SCF_energy(ao_ints['H'], F, D, True) + e_ZZ_repul
     # RHF, psi4
     import psi4
     mol = psi4.geometry(scf_params['geometry'])

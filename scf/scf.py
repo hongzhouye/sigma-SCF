@@ -87,14 +87,10 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     method = scf_params['method']
 
     # unpack ao_int
-    T = ao_int['T']
-    V = ao_int['V']
+    H = ao_int['H']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
     S = ao_int['S']
     A = ao_int['A']
-
-    # build Hcore (T and V are not needed in scf)
-    H = T + V
 
     # initial guess (case insensitive)
     logger_verbose.info("\n\t** RHF initial guess: %s" % guess.upper())
@@ -111,7 +107,7 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     eps, C = diag(F, A)
     D = get_dm(C, nel)
     F = get_fock(H, g, D)
-    e_scf = get_SCF_energy(ao_int, F, D, False)
+    e_scf = get_SCF_energy(H, F, D, False)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -140,7 +136,7 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            E = get_SCF_energy(ao_int, F, D, False)
+            E = get_SCF_energy(H, F, D, False)
             lbd = oda_update(F - Fold, D - Dold, E - Eold)
             D = lbd * D + (1. - lbd) * Dold
             F = lbd * F + (1. - lbd) * Fold
@@ -158,7 +154,7 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
                 if len(F_prev_list) > 1 else get_fock(H, g, D)
 
         # get energy
-        e_scf = get_SCF_energy(ao_int, F, D, False)
+        e_scf = get_SCF_energy(H, F, D, False)
         e_tot = e_scf + e_nuc
 
         # print iteratoin info
@@ -211,14 +207,10 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
 
     # unpack ao_int
-    T = ao_int['T']
-    V = ao_int['V']
+    H = ao_int['H']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
     S = ao_int['S']
     A = ao_int['A']
-
-    # build Hcore (T and V are not needed in scf)
-    H = T + V
 
     # initial guess (case insensitive)
     logger_verbose.info("\n\t** UHF initial guess: %s" % guess.upper())
@@ -239,7 +231,7 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     Cb = homo_lumo_mix(C, nelb, mixing_beta)
     Db = get_dm(Cb, nelb)
     F, Fb = get_fock_uhf(H, g, [D, Db])
-    e_scf = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+    e_scf = get_SCF_energy(H, [F, Fb], [D, Db], True)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -272,7 +264,7 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            E = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+            E = get_SCF_energy(H, [F, Fb], [D, Db], True)
             lbd = oda_update_uhf(\
                 [F - Fold, Fb - Fbold], [D - Dold, Db - Dbold], E - Eold)
             D = lbd * D + (1. - lbd) * Dold
@@ -299,7 +291,7 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
                 if len(F_prev_list) > 1 else get_fock_uhf(H, g, [D, Db])
 
         # get energy
-        e_scf = get_SCF_energy(ao_int, [F, Fb], [D, Db], True)
+        e_scf = get_SCF_energy(H, [F, Fb], [D, Db], True)
         e_tot = e_scf + e_nuc
 
         # print iteratoin info

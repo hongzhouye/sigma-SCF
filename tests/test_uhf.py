@@ -11,8 +11,7 @@ def test_uhf():
     ao_ints, test_scf_param, e_ZZ_repulsion = scf.init(\
         os.path.dirname(__file__) + "/test_uhf.yml")
     eps, C, D, F = scf.scf(ao_ints, test_scf_param, e_ZZ_repulsion)
-    H = ao_ints['T'] + ao_ints['V']
-    energy = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repulsion
+    energy = scf.get_SCF_energy(ao_ints['H'], F, D, True) + e_ZZ_repulsion
     print("energy: %f" % energy)
 
     # psi4 setup

@@ -19,13 +19,13 @@ def test_xform():
     # parse parameter from input file
     ao_ints, scf_params, e_ZZ_repul = \
         scf.init(os.path.dirname(__file__) + '/test_xform.yml')
-    H = ao_ints['T'] + ao_ints['V']
+    H = ao_ints['H']
     g = ao_ints['g4']
     nbas = scf_params['nbas']
     nel = scf_params['nel_alpha']
     # w/o xform
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    energy1 = np.sum((F + H) * D) + e_ZZ_repul
+    energy1 = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repul
     # energy using MO basis
     H_mo = scf.xform_2(H, C)
     g_mo = scf.xform_4(g, C)
@@ -36,14 +36,12 @@ def test_xform():
     energy3 = np.sum((F_mo + H_mo) * D_mo) + e_ZZ_repul
     # w/ xform (do the SCF in symmetrically orthogonalized basis set)
     A = ao_ints['A']
-    ao_ints['T'] = scf.xform_2(ao_ints['T'], A)
-    ao_ints['V'] = scf.xform_2(ao_ints['V'], A)
+    ao_ints['H'] = scf.xform_2(ao_ints['H'], A)
     ao_ints['g4'] = scf.xform_4(ao_ints['g4'], A)
     ao_ints['S'] = np.eye(A.shape[0])
     ao_ints['A'] = np.eye(A.shape[0])
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    H = ao_ints['T'] + ao_ints['V']
-    energy2 = np.sum((F + H) * D) + e_ZZ_repul
+    energy2 = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repul
 
     print(energy1, energy2, energy3)
 

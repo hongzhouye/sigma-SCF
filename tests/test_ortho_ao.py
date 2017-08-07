@@ -11,7 +11,7 @@ def test_ortho_ao():
         os.path.dirname(__file__) + "/test_ortho_ao.yml")
     eps, C, D, F = scf.scf(ao_ints, test_scf_param, e_ZZ_repulsion)
     H = ao_ints['T'] + ao_ints['V']
-    energy = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repulsion
+    energy = scf.get_SCF_energy(ao_ints['H'], F, D, True) + e_ZZ_repulsion
 
     # psi4 setup
     import psi4

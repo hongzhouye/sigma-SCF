@@ -11,17 +11,18 @@ def test_df():
     """
     Compare psi4 energy (w/ DF) and our energy (w/ DF)
     """
-    # rhf
+    # get integrals
     ao_ints, scf_params, e_ZZ_repul = \
         scf.init(os.path.dirname(__file__) + '/test_df.yml')
+    # rhf
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    energy_rhf = scf.get_SCF_energy(ao_ints, F, D, False) + e_ZZ_repul
+    energy_rhf = scf.get_SCF_energy(ao_ints['H'], F, D, False) + e_ZZ_repul
 
     # uhf
     scf_params['unrestricted'] = True
     scf_params['homo_lumo_mix'] = 0
     eps, C, D, F = scf.scf(ao_ints, scf_params, e_ZZ_repul)
-    energy_uhf = scf.get_SCF_energy(ao_ints, F, D, True) + e_ZZ_repul
+    energy_uhf = scf.get_SCF_energy(ao_ints['H'], F, D, True) + e_ZZ_repul
 
     # psi4
     import psi4

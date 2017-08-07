@@ -53,6 +53,8 @@ def init(input_file):
         else:
             raise Exception(\
                 "Keywords ORTHO_AO and IS_FITTED cannot be true simultaneously")
+    # get Hcore
+    ao_ints['H'] = ao_ints['T'] + ao_ints['V']
     # get nel_alpha/beta from spin and charge
     n_el_tot -= scf_params['charge']    # total num of electrons
     n_el_diff = scf_params['spin'] - 1  # n_el_alpha - n_el_beta
