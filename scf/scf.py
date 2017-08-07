@@ -89,7 +89,7 @@ def rhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
-    logging.info("\t** SCF initial guess: %s" % guess.upper())
+    logging.info("\t** RHF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         F = H
     elif guess.upper() == "HUCKEL":
@@ -160,12 +160,12 @@ def rhf(ao_int, scf_params, e_nuc):
             break
 
     print("\t\t---------------------------------\n")
-    # post process
+    # check convergence
     if conv_flag:
-        logging.info("\t** R-SCF converges in %d iterations! **" % iteration)
+        logging.info("\t** RHF converges in %d iterations! **" % iteration)
         return eps, C, D, F
     else:
-        logging.error("\t** R-SCF fails to converge in %d iterations! **" \
+        raise Exception("\t** RHF fails to converge in %d iterations! **" \
             % max_iter)
 
 
@@ -173,6 +173,7 @@ def uhf(ao_int, scf_params, e_nuc):
     """
     Spin-unrestricted Hartree-Fock
     """
+    logging.info("\t** Module: Spin-unrestricted Hartree-Fock **")
     # unpack scf_params
     nel = scf_params['nel_alpha']
     nelb = scf_params['nel_beta']
@@ -198,6 +199,7 @@ def uhf(ao_int, scf_params, e_nuc):
     H = T + V
 
     # initial guess (case insensitive)
+    logging.info("\t** UHF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
         F = H
     elif guess.upper() == "HUCKEL":
@@ -226,6 +228,10 @@ def uhf(ao_int, scf_params, e_nuc):
     rb_prev_list = deque([], max_prev_count)
 
     # SCF loop
+    logging.info("\t** Starting UHF SCF loop **")
+    print("\t\t---------------------------------")
+    print("\t\titer   total energy   ||[D, F]||")
+    print("\t\t---------------------------------")
     conv_flag = False
     for iteration in range(1,(max_iter+1)):
         # oda collect old Fock/DM/Energy
@@ -273,23 +279,18 @@ def uhf(ao_int, scf_params, e_nuc):
         energy = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
 
         # print iteratoin info
-        print("iter: {0:2d}, etot: {1:0.8F}, err: {2:0.5E}".format(\
-            iteration, energy, errtot))
+        print("\t\t%4d   % 12.8F   %7.4E" % (iteration, energy, errtot))
 
         # check convergence
         if errtot < conv:
             conv_flag = True
-            print ("  ** U-SCF converges in %d iterations! **" % iteration)
-            eps, C = diag(F, A)
-            D = get_dm(C, nel)
-            epsb, Cb = diag(Fb, A)
-            Db = get_dm(Cb, nelb)
             break
 
-
-    # post process
+    print("\t\t---------------------------------\n")
+    # check convergence
     if conv_flag:
+        logging.info("\t** UHF converges in %d iterations! **" % iteration)
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
-        raise Exception ("  ** U-SCF fails to converge in %d iterations! **"
+        raise Exception("\t** UHF fails to converge in %d iterations! **"
                          % max_iter)
