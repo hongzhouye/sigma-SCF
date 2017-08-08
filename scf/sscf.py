@@ -15,7 +15,7 @@ from collections import deque
 np.set_printoptions(suppress=True, precision=3)
 
 
-def sscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
+def sscf(ao_int, scf_params, e_nuc, mode = "minvar", logger_level = "normal"):
     """
     Solve the sigma-SCF problem given AO integrals (ao_int [dict]):
         - T: ao_kinetic
@@ -62,12 +62,12 @@ def sscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     """
     # rhf or uhf
     if scf_params['unrestricted'] == True:
-        return usscf(ao_int, scf_params, e_nuc, logger_level)
+        return usscf(ao_int, scf_params, e_nuc, mode, logger_level)
     else:
-        return rsscf(ao_int, scf_params, e_nuc, logger_level)
+        return rsscf(ao_int, scf_params, e_nuc, mode, logger_level)
 
 
-def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
+def rsscf(ao_int, scf_params, e_nuc, mode = "minvar", logger_level = "normal"):
     """
     Spin-restricted Hartree-Fock
     """
@@ -92,30 +92,24 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     method = scf_params['method']
     omega = scf_params['omega']
 
+    logger_verbose.info("\n\t** MODE: %s" % (\
+        "direct energy targeting" if mode.upper() == "DIRECT" \
+        else "variance minimization"))
+
     # unpack ao_int
     if scf_params['ortho_ao'] == False:
         raise Exception("ORTHO_AO must be set True for sigma-SCF!")
-    T = ao_int['T']
-    V = ao_int['V']
+    H = ao_int['H']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
     S = ao_int['S']
     A = ao_int['A']
 
-    # build Hcore (T and V are not needed in scf)
-    H = T + V
-
     # initial guess (case insensitive)
     logger_verbose.info("\n\t** RSSCF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
-        scf_params['guess'] = 'huckel'
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
-        scf_params['guess'] = 'core'
-        Q = np.eye(nbas) - D
-        Feff = F @ (Q - D) @ F
+        Feff = get_SSCF_core_guess(ao_int, scf_params, e_nuc, mode)
     elif guess.upper() == "HUCKEL":
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
-        Q = np.eye(nbas) - D
-        Heff = F @ (Q - D) @ F
+        Heff = get_SSCF_core_guess(ao_int, scf_params, e_nuc, mode)
         dH = np.diag(Heff)
         Feff = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
     # elif guess.upper() == "RHF":
@@ -125,8 +119,8 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
 
     eps, C = diag(Feff, A)
     D = get_dm(C, nel)
-    Feff = get_fock_eff(H, g, D, False)
-    var = get_SSCF_variance(H, g, D, False)
+    Feff = get_fock_eff(H, g, D, False, mode, omega)
+    var = get_SSCF_variance(H, g, D, False, mode, omega)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
@@ -151,14 +145,15 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         D = get_dm(C, nel)
 
         # get F
-        Feff = get_fock_eff(H, g, D, False)
+        Feff = get_fock_eff(H, g, D, False, mode, omega)
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            W = get_SSCF_variance(H, g, D, False)
-            lbd = oda_update(Feff - Feffold, D - Dold, W - Wold)
+            W = get_SSCF_variance(H, g, D, False, mode, omega)
+            lbd = oda_update_sscf(\
+                H, g, D, Dold, W, Wold, False, mode, omega, 2)
             D = lbd * D + (1. - lbd) * Dold
-            Feff = lbd * Feff + (1. - lbd) * Feffold
+            Feff = get_fock_eff(H, g, D, False, mode, omega)
 
         # calculate error
         err, err_v = get_SCF_err(S, D, Feff)
@@ -170,12 +165,13 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         # diis update
         if opt.upper() == "DIIS":
             Feff = diis_update(Feff_prev_list, r_prev_list) \
-                if len(Feff_prev_list) > 1 else get_fock_eff(H, g, D, False)
+                if len(Feff_prev_list) > 1 \
+                else get_fock_eff(H, g, D, False, mode, omega)
 
         # get energy
         F = get_fock(H, g, D)
-        e_tot = get_SCF_energy(ao_int, F, D, False) + e_nuc
-        var = get_SSCF_variance(H, g, D, False)
+        e_tot = get_SCF_energy(H, F, D, False) + e_nuc
+        var = get_SSCF_variance(H, g, D, False, mode, omega)
 
         # print iteratoin info
         logger_concise.info(\
@@ -197,7 +193,7 @@ def rsscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
             "\t** RSSCF fails to converge in %d iterations! **" % max_iter)
 
 
-def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
+def usscf(ao_int, scf_params, e_nuc, mode = "minvar", logger_level = "normal"):
     """
     Spin-unrestricted Hartree-Fock
     """
@@ -223,46 +219,42 @@ def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     method = scf_params['method']
     unrestricted = scf_params['unrestricted']
     mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
+    omega = scf_params['omega']
 
     # unpack ao_int
     if scf_params['ortho_ao'] == False:
         raise Exception("ORTHO_AO must be set True for sigma-SCF!")
-    T = ao_int['T']
-    V = ao_int['V']
+    H = ao_int['H']
     g = ao_int['g3'] if is_fitted else ao_int['g4']
     S = ao_int['S']
     A = ao_int['A']
 
-    # build Hcore (T and V are not needed in scf)
-    H = T + V
-
     # initial guess (case insensitive)
     logger_verbose.info("\n\t** USSCF initial guess: %s" % guess.upper())
     if guess.upper() == "CORE":
-        scf_params['guess'] = 'huckel'
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
-        scf_params['guess'] = 'core'
-        Q = np.eye(nbas) - D
-        Feff = F @ (Q - D) @ F
+        Feff = get_SSCF_core_guess(ao_int, scf_params, e_nuc, mode)
     elif guess.upper() == "HUCKEL":
-        eps, C, D, F = rhf(ao_int, scf_params, e_nuc, "mute")
-        Q = np.eye(nbas) - D
-        Heff = F @ (Q - D) @ F
+        Heff = get_SSCF_core_guess(ao_int, scf_params, e_nuc, mode)
         dH = np.diag(Heff)
         Feff = 1.75 * S * (dH.reshape(nbas, 1) + dH) * 0.5
+    elif guess.upper() == "USER":
+        C, Cb = scf_params['guess_C'], scf_params['guess_Cb']
+        D, Db = get_dm(C, nel), get_dm(Cb, nelb)
     else:
         raise Exception("Keyword guess must be core, huckel.")
 
-    eps, C = diag(Feff, A)
-    D = get_dm(C, nel)
-    Cb = homo_lumo_mix(C, nelb, mixing_beta)
-    Db = get_dm(Cb, nelb)
-    Feff, Fbeff = get_fock_eff(H, g, [D, Db], True)
-    var = get_SSCF_variance(H, g, [D, Db], True)
+    if guess.upper() == "CORE" or guess.upper() == "HUCKEL":
+        eps, C = diag(Feff, A)
+        D = get_dm(C, nel)
+        Cb = homo_lumo_mix(C, nelb, mixing_beta)
+        Db = get_dm(Cb, nelb)
+
+    Feff, Fbeff = get_fock_eff(H, g, [D, Db], True, mode, omega)
+    var = get_SSCF_variance(H, g, [D, Db], True, mode, omega)
 
     # initialize storage of errors and previous Fs if we're doing DIIS
     max_prev_count = 1
-    if(opt.upper() == 'DIIS'):
+    if 'DIIS' in opt.upper():   # opt = DIIS or ODA+DIIS
         max_prev_count = 10
     Feff_prev_list = deque([], max_prev_count)
     r_prev_list = deque([], max_prev_count)
@@ -287,18 +279,16 @@ def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
         Db = get_dm(Cb, nelb)
 
         # get F
-        Feff, Fbeff = get_fock_eff(H, g, [D, Db], True)
+        Feff, Fbeff = get_fock_eff(H, g, [D, Db], True, mode, omega)
 
         # oda: collect new Fock/DM/Energy
         if opt.upper() == "ODA":
-            W = get_SSCF_variance(H, g, [D, Db], True)
-            lbd = oda_update_uhf(\
-                [Feff - Feffold, Fbeff - Fbeffold], \
-                [D - Dold, Db - Dbold], W - Wold)
+            W = get_SSCF_variance(H, g, [D, Db], True, mode, omega)
+            lbd = oda_update_sscf(
+                H, g, [D, Db], [Dold, Dbold], W, Wold, True, mode, omega, 2)
             D = lbd * D + (1. - lbd) * Dold
             Db = lbd * Db + (1. - lbd) * Dbold
-            Feff = lbd * Feff + (1. - lbd) * Feffold
-            Fbeff = lbd * Fbeff + (1. - lbd) * Fbeffold
+            Feff, Fbeff = get_fock_eff(H, g, [D, Db], True, mode, omega)
 
         # calculate error
         err, err_v = get_SCF_err(S, D, Feff)
@@ -317,12 +307,12 @@ def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
                 [Feff_prev_list, Fbeff_prev_list], \
                 [r_prev_list, rb_prev_list]) \
                 if len(Feff_prev_list) > 1 \
-                else get_fock_eff(H, g, [D, Db], True)
+                else get_fock_eff(H, g, [D, Db], True, mode, omega)
 
         # get energy
         F, Fb = get_fock_uhf(H, g, [D, Db])
-        e_tot = get_SCF_energy(ao_int, [F, Fb], [D, Db], True) + e_nuc
-        var = get_SSCF_variance(H, g, [D, Db], True)
+        e_tot = get_SCF_energy(H, [F, Fb], [D, Db], True) + e_nuc
+        var = get_SSCF_variance(H, g, [D, Db], True, mode, omega)
 
         # print iteratoin info
         logger_concise.info(\
@@ -340,5 +330,6 @@ def usscf(ao_int, scf_params, e_nuc, logger_level = "normal"):
             "\n\t** USSCF converges in %d iterations! **" % iteration)
         return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
     else:
-        raise Exception(\
-            "\t** U-SCF fails to converge in %d iterations! **" % max_iter)
+        #raise Exception(\
+        #    "\t** U-SCF fails to converge in %d iterations! **" % max_iter)
+        return [eps, epsb], [C, Cb], [D, Db], [F, Fb]
