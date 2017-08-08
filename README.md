@@ -17,14 +17,14 @@ See our paper (coming soon).
   * Mac instruction:
   ```bash
   curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O
-  bash Miniconda3-latest-MacOSX-x86_64.sh -b -p $HOME/miniconda
-  echo PATH="\$HOME/miniconda/bin:\$PATH" >> ~/.bash_profile
+  bash Miniconda3-latest-MacOSX-x86_64.sh -b -p $HOME/local/opt/miniconda
+  echo PATH="\$HOME/local/opt/miniconda/bin:\$PATH" >> ~/.bash_profile
   ```
   * Linux instruction:
   ```bash
   wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  bash miniconda.sh -b -p $HOME/miniconda
-  echo PATH="\$HOME/miniconda/bin:\$PATH" >> ~/.bashrc
+  bash miniconda.sh -b -p $HOME/local/opt/miniconda
+  echo PATH="\$HOME/local/opt/miniconda/bin:\$PATH" >> ~/.bashrc
   ```
   * Windows instruction:
   ```
