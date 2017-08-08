@@ -3,6 +3,7 @@
 
 
 # sigma-SCF
+
 A direct energy targeting method to mean-field excited states
 ---
 
