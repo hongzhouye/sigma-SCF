@@ -3,6 +3,34 @@
 
 
 # sigma-SCF
+### A direct energy targeting method to mean-field excited states
+
+Method
+---
+
+See our paper (coming soon).
+
+Install
+---
+1. First make sure `conda` is installed:
+  * Mac instruction:
+  ```bash
+  curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O
+  bash Miniconda3-latest-MacOSX-x86_64.sh -b -p $HOME/miniconda
+  echo PATH="\$HOME/miniconda/bin:\$PATH" >> ~/.bash_profile
+  ```
+  * Linux instruction:
+  ```bash
+  wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  bash miniconda.sh -b -p $HOME/miniconda
+  echo PATH="\$HOME/miniconda/bin:\$PATH" >> ~/.bashrc
+  ```
+  * Windows instruction:
+  ```
+  May the force be with you
+  ```
+
+
 
 ## Hongzhou Ye
 Hi! This is Hongzhou from MIT. I am doing method development in electronic structure theory. Specifically we are developing methods for molecular systems w/ strong correlation.
