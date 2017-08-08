@@ -3,15 +3,15 @@
 
 
 # sigma-SCF
-### A direct energy targeting method to mean-field excited states
-
-Method
+A direct energy targeting method to mean-field excited states
 ---
+
+### Method
 
 See our paper (coming soon).
 
-Install
----
+### Install
+
 1. First make sure `conda` is installed:
   * Mac instruction:
   ```bash
