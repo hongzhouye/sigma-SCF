@@ -7,10 +7,12 @@ A direct energy targeting method to mean-field excited states
 ---
 
 ### Method
+----
 
 See our paper (coming soon).
 
 ### Install
+----
 
 1. First make sure `conda` is installed:
   * Mac instruction:
@@ -71,6 +73,7 @@ or
 you should see no error messages.
 
 ### Tests
+----
 
 There are some built-in tests in directory `sigma-SCF/tests`. You can run from directory `sigma-SCF` by
   ```bash
@@ -78,6 +81,7 @@ There are some built-in tests in directory `sigma-SCF/tests`. You can run from d
   ```
 
 ### Author Lists
+----
 
 #### Hongzhou Ye
 Hi! This is Hongzhou from MIT. I am doing method development in electronic structure theory. Specifically we are developing methods for molecular systems w/ strong correlation.
