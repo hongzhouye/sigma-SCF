@@ -27,7 +27,7 @@ Install
   ```
   * Windows instruction:
   ```
-  May the force be with you
+  You are on your own. GOOD LUCK!
   ```
 
 
