@@ -168,3 +168,60 @@ def oda_update_sscf(H, g, D, Dold, var, var_old, unrestricted, \
         #lbd = 1.0001 if var_old > var else -0.0001
     #print("%f  %f  %f" % (lbd_old, lbd, var - var_old))
     return lbd
+
+
+def get_fock_eff_det(H, g, D, unrestricted, mode, omega):
+    if unrestricted == True:
+        if type(D) is not list:
+            raise Exception("For DET-USSCF, Arg3 (D) must be list.")
+        feff, fbeff = get_fock_eff(H, g, D, True, "direct", omega)
+        F, Fb = get_fock_uhf(H, g, D)
+        e_scf = get_SCF_energy(H, [F, Fb], D, True)
+        W = get_SSCF_variance(H, g, D, unrestricted, "direct", omega)
+        Feff_det = -F / W + (e_scf - omega) / W ** 2 * feff
+        Fbeff_det = -Fb / W + (e_scf - omega) / W ** 2 * fbeff
+        return Feff_det, Fbeff_det
+    else:
+        raise Exception("Currently DET-SSCF does not support spin-"
+            "restricted case.")
+
+
+def get_SSCF_variance_det(H, g, D, unrestricted, mode, omega):
+    if unrestricted == True:
+        if type(D) is not list:
+            raise Exception("For DET-USSCF, Arg3 (D) must be list.")
+        F, Fb = get_fock_uhf(H, g, D)
+        e_scf = get_SCF_energy(H, [F, Fb], D, True)
+        W = get_SSCF_variance(H, g, D, unrestricted, "direct", omega)
+        return (omega - e_scf) / W
+    else:
+        raise Exception("Currently DET-SSCF does not support spin-"
+            "restricted case.")
+
+
+def oda_update_sscf_det(H, g, D, Dold, var, var_old, unrestricted, \
+    mode, omega, deg = 2):
+    """
+    Do a nth-order polynomial interpolation and then solve for its minimum.
+    """
+    lbd_set = np.linspace(0.1, 0.9, deg + 2)
+    var_set = []
+    if unrestricted == True and type(D) is not list:
+        raise Exception("For USSCF, Arg3 (D) must be list.")
+    for lbd in lbd_set:
+        if unrestricted == True:
+            Dn = [lbd * x[0] + (1. - lbd) * x[1] for x in zip(D, Dold)]
+        else:
+            Dn = lbd * D + (1. - lbd) * Dold
+        var_set.append(\
+            get_SSCF_variance_det(H, g, Dn, unrestricted, mode, omega))
+    var_set = np.array(var_set)
+    # fit
+    p_coeff = np.polyfit(lbd_set, var_set, deg = deg)
+    lbd = poly_min(p_coeff)
+    lbd_old = lbd
+    if lbd > 1 or lbd < 0:
+        lbd = 0.9999 if var_old > var else 0.0001
+        #lbd = 1.0001 if var_old > var else -0.0001
+    #print("%f  %f  %f" % (lbd_old, lbd, var - var_old))
+    return lbd

@@ -84,7 +84,6 @@ def rhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     guess = scf_params['guess']
     max_iter = scf_params['max_iter']
     is_fitted = scf_params['is_fitted']
-    method = scf_params['method']
 
     # unpack ao_int
     H = ao_int['H']
@@ -202,7 +201,6 @@ def uhf(ao_int, scf_params, e_nuc, logger_level = "normal"):
     guess = scf_params['guess']
     max_iter = scf_params['max_iter']
     is_fitted = scf_params['is_fitted']
-    method = scf_params['method']
     unrestricted = scf_params['unrestricted']
     mixing_beta = float(scf_params['homo_lumo_mix']) / 10.
 

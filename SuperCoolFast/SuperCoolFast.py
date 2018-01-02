@@ -7,7 +7,8 @@ import numpy
 if __name__ == "__main__":
     ao_ints, scf_params, e_ZZ_repul = init(sys.argv[1])
     eps, C, D, F = scf(ao_ints, scf_params, e_ZZ_repul)
-    energy = get_SCF_energy(ao_ints, F, D, scf_params['unrestricted']) \
+    H = ao_ints['T'] + ao_ints['V']
+    energy = get_SCF_energy(H, F, D, scf_params['unrestricted']) \
         + e_ZZ_repul
     print("\nFINAL SCF ENERGY: {}\n".format(energy))
 
